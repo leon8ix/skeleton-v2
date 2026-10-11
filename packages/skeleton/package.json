@@ -1,27 +1,20 @@
 {
-	"name": "@skeletonlabs/skeleton",
+	"name": "@leon8ix/skeleton-v2",
 	"version": "2.11.0",
 	"description": "A SvelteKit component library.",
 	"author": "endigo9740 <chris@skeletonlabs.dev>",
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
-		"package": "node ./scripts/pre-build.js && svelte-kit sync && svelte-package && node ./scripts/post-build.js",
-		"preview": "vite preview",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"lint": "prettier --ignore-path .prettierignore --check --plugin-search-dir=. . && eslint --fix --ignore-path .gitignore .",
-		"format": "prettier --ignore-path .prettierignore --write --plugin-search-dir=. .",
-		"test": "vitest",
-		"coverage": "vitest run --coverage",
-		"sync": "svelte-kit sync"
+		"build": "svelte-package",
+		"check": "svelte-check --tsconfig ./tsconfig.json",
+		"test": "vitest run",
+		"format": "prettier --write ."
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/skeletonlabs/skeleton.git"
+		"url": "https://github.com/leon8ix/skeleton-v2.git"
 	},
 	"bugs": {
-		"url": "https://github.com/skeletonlabs/skeleton/issues"
+		"url": "https://github.com/leon8ix/skeleton-v2/issues"
 	},
 	"keywords": [
 		"cli",
@@ -40,72 +33,37 @@
 	"license": "MIT",
 	"homepage": "https://skeleton.dev/",
 	"devDependencies": {
-		"@sveltejs/adapter-auto": "2.1.0",
-		"@sveltejs/kit": "1.20.5",
-		"@sveltejs/package": "^2.1.0",
-		"@testing-library/dom": "9.3.0",
-		"@testing-library/svelte": "4.0.1",
-		"@typescript-eslint/eslint-plugin": "5.59.9",
-		"@typescript-eslint/parser": "5.59.9",
-		"@vitest/coverage-c8": "0.32.0",
-		"autoprefixer": "10.4.14",
-		"eslint": "8.42.0",
-		"eslint-config-prettier": "8.8.0",
-		"eslint-plugin-svelte": "^2.31.0",
-		"jsdom": "21.1.1",
-		"postcss": "8.4.24",
-		"postcss-import": "15.1.0",
-		"postcss-js": "4.0.1",
-		"postcss-load-config": "4.0.1",
-		"prettier": "^3.2.5",
-		"prettier-plugin-svelte": "^3.2.3",
-		"svelte": "4.2.15",
-		"svelte-check": "^3.4.4",
-		"tailwindcss": "3.3.2",
-		"tslib": "2.5.3",
-		"typescript": "5.0.3",
-		"vite": "4.3.9",
-		"vitest": "0.32.0"
+		"@sveltejs/package": "^3.0.0",
+		"@sveltejs/vite-plugin-svelte": "^7.3.1",
+		"@testing-library/dom": "^10.4.2",
+		"@testing-library/svelte": "^5.4.2",
+		"jsdom": "^30.1.2",
+		"svelte": "^5.57.2",
+		"svelte-check": "^4.7.6",
+		"vite": "^8.3.4",
+		"vitest": "^5.0.3"
 	},
 	"type": "module",
 	"dependencies": {
-		"esm-env": "1.0.0"
+		"esm-env": "^1.2.2"
 	},
 	"peerDependencies": {
-		"svelte": "^3.56.0 || ^4.0.0 || ^5.0.0"
+		"svelte": "^5.57.2"
 	},
-	"publishConfig": {
-		"types": "./dist/index.d.ts",
-		"exports": {
-			".": {
-				"types": "./dist/index.d.ts",
-				"svelte": "./dist/index.js",
-				"default": "./dist/index.js"
-			}
-		},
-		"typesVersions": {
-			">4.0": {
-				"index.d.ts": [
-					"./dist/index.d.ts"
-				]
-			}
-		}
-	},
-	"types": "./src/lib/index.ts",
+	"types": "./dist/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./src/lib/index.ts",
-			"svelte": "./src/lib/index.ts",
-			"default": "./src/lib/index.ts"
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js",
+			"default": "./dist/index.js"
 		},
-		"./*": "./src/lib/*"
+		"./*": "./dist/*"
 	},
 	"files": [
-		"./dist/**/*.svelte",
-		"./dist/**/*.js",
-		"./dist/**/*.d.ts",
-		"./dist/**/*.cjs",
-		"./dist/**/*.d.cts",
-		"!./dist/**/*.test.*"
-	]
+		"dist",
+		"!dist/**/*.test.*",
+		"!dist/**/*Test.svelte",
+		"!dist/**/*Test.svelte.d.ts"
+	],
+	"svelte": "./dist/index.js"
 }

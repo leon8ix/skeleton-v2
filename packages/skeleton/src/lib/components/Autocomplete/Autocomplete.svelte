@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 	import { slide } from 'svelte/transition';
 	import { prefersReducedMotionStore, type Transition, type TransitionParams } from '../../index.js';
 	import { dynamicTransition } from '../../internal/transitions.js';
@@ -16,7 +16,6 @@
 	generics="Value = unknown, Meta = unknown, 
 	TransitionIn extends Transition = SlideTransition, TransitionOut extends Transition = SlideTransition"
 >
-	import { createEventDispatcher } from 'svelte';
 	// import { flip } from 'svelte/animate';
 	// import {slide} from 'svelte/transition';
 
@@ -28,79 +27,76 @@
 	type AutocompleteEvent = {
 		selection: Option;
 	};
-	const dispatch = createEventDispatcher<AutocompleteEvent>();
-
-	// Props
-	/**
-	 * Bind the input value.
-	 * @type {unknown | undefined}
-	 */
-	export let input: unknown | undefined = undefined;
-	/**
-	 * Define values for the list.
-	 * @type {AutocompleteOption[]}
-	 */
-	export let options: Option[] = [];
-	/** Limit the total number of suggestions. */
-	export let limit: number | undefined = undefined;
-	/**
-	 * Provide allowlist values.
-	 * @type {Value[]}
-	 */
-	export let allowlist: Value[] = [];
-	/**
-	 * Provide denylist values.
-	 * @type {Value[]}
-	 */
-	export let denylist: Value[] = [];
-	/** Provide a HTML markup to display when no match is found. */
-	export let emptyState = 'No Results Found.';
-	// Props (region)
-	/** Provide arbitrary classes to nav element. */
-	export let regionNav = '';
-	/** Provide arbitrary classes to each list. */
-	export let regionList = 'list-nav';
-	/** Provide arbitrary classes to each list item. */
-	export let regionItem = '';
-	/** Provide arbitrary classes to each button. */
-	export let regionButton = 'w-full';
-	/** Provide arbitrary classes to empty message. */
-	export let regionEmpty = 'text-center';
-	/**
-	 * Provide a custom filter function.
-	 * @type {() => AutocompleteOption[]}
-	 */
-	export let filter: () => Option[] = filterOptions;
 
 	// Props (transition)
-	/**
-	 * Enable/Disable transitions
-	 * @type {boolean}
-	 */
-	export let transitions = !$prefersReducedMotionStore;
-	/**
-	 * Provide the transition used on entry.
-	 * @type {TransitionIn}
-	 */
-	export let transitionIn: TransitionIn = slide as TransitionIn;
-	/**
-	 * Transition params provided to `transitionIn`.
-	 * @type {TransitionParams}
-	 */
-	export let transitionInParams: TransitionParams<TransitionIn> = { duration: 200 };
-	/**
-	 * Provide the transition used on exit.
-	 * @type {TransitionOut}
-	 */
-	export let transitionOut: TransitionOut = slide as TransitionOut;
-	/**
-	 * Transition params provided to `transitionOut`.
-	 * @type {TransitionParams}
-	 */
-	export let transitionOutParams: TransitionParams<TransitionOut> = { duration: 200 };
+
+	interface Props {
+		class?: string;
+		onselection?: ((event: AutocompleteEvent['selection']) => void) | undefined;
+		onclick?: ((event: MouseEvent) => void) | undefined;
+		onkeypress?: ((event: KeyboardEvent) => void) | undefined;
+		/** Bind the input value. */
+		input?: unknown | undefined;
+		/** Define values for the list. */
+		options?: Option[];
+		/** Limit the total number of suggestions. */
+		limit?: number | undefined;
+		/** Provide allowlist values. */
+		allowlist?: Value[];
+		/** Provide denylist values. */
+		denylist?: Value[];
+		/** Provide a HTML markup to display when no match is found. */
+		emptyState?: string;
+		/** Provide arbitrary classes to nav element. */
+		regionNav?: string;
+		/** Provide arbitrary classes to each list. */
+		regionList?: string;
+		/** Provide arbitrary classes to each list item. */
+		regionItem?: string;
+		/** Provide arbitrary classes to each button. */
+		regionButton?: string;
+		/** Provide arbitrary classes to empty message. */
+		regionEmpty?: string;
+		/** Provide a custom filter function. */
+		filter?: () => Option[];
+		/** Enable/Disable transitions */
+		transitions?: boolean;
+		/** Provide the transition used on entry. */
+		transitionIn?: TransitionIn;
+		/** Transition params provided to `transitionIn`. */
+		transitionInParams?: TransitionParams<TransitionIn>;
+		/** Provide the transition used on exit. */
+		transitionOut?: TransitionOut;
+		/** Transition params provided to `transitionOut`. */
+		transitionOutParams?: TransitionParams<TransitionOut>;
+	}
+
+	let {
+		class: className = '',
+		onselection = undefined,
+		onclick = undefined,
+		onkeypress = undefined,
+		input = undefined,
+		options = [],
+		limit = undefined,
+		allowlist = [],
+		denylist = [],
+		emptyState = 'No Results Found.',
+		regionNav = '',
+		regionList = 'list-nav',
+		regionItem = '',
+		regionButton = 'w-full',
+		regionEmpty = 'text-center',
+		filter = filterOptions,
+		transitions = !$prefersReducedMotionStore,
+		transitionIn = slide as TransitionIn,
+		transitionInParams = { duration: 200 },
+		transitionOut = slide as TransitionOut,
+		transitionOutParams = { duration: 200 }
+	}: Props = $props();
 
 	// Local
-	$: listedOptions = options;
+	let listedOptions = $derived(filterByAllowDeny(allowlist, denylist));
 
 	function filterByAllowDeny(allowlist: Value[], denylist: Value[]) {
 		let _options = [...options];
@@ -119,7 +115,7 @@
 			_options = options;
 		}
 
-		listedOptions = _options;
+		return _options;
 	}
 
 	function filterOptions(): Option[] {
@@ -139,20 +135,20 @@
 
 	function onSelection(option: Option) {
 		/** @event {Option} selection - Fire on option select. */
-		dispatch('selection', option);
+		onselection?.(option);
 	}
 
 	// State
-	$: filterByAllowDeny(allowlist, denylist);
-	$: optionsFiltered = input ? filter() : listedOptions;
-	$: sliceLimit = limit ?? optionsFiltered.length;
+
+	let optionsFiltered = $derived(input ? filter() : listedOptions);
+	let sliceLimit = $derived(limit ?? optionsFiltered.length);
 	// Reactive
-	$: classesBase = `${$$props.class ?? ''}`;
-	$: classesNav = `${regionNav}`;
-	$: classesList = `${regionList}`;
-	$: classesItem = `${regionItem}`;
-	$: classesButton = `${regionButton}`;
-	$: classesEmpty = `${regionEmpty}`;
+	let classesBase = $derived(`${className ?? ''}`);
+	let classesNav = $derived(`${regionNav}`);
+	let classesList = $derived(`${regionList}`);
+	let classesItem = $derived(`${regionItem}`);
+	let classesButton = $derived(`${regionButton}`);
+	let classesEmpty = $derived(`${regionEmpty}`);
 </script>
 
 <!-- animate:flip={{ duration }} -->
@@ -166,7 +162,15 @@
 						in:dynamicTransition|local={{ transition: transitionIn, params: transitionInParams, enabled: transitions }}
 						out:dynamicTransition|local={{ transition: transitionOut, params: transitionOutParams, enabled: transitions }}
 					>
-						<button class="autocomplete-button {classesButton}" type="button" on:click={() => onSelection(option)} on:click on:keypress>
+						<button
+							class="autocomplete-button {classesButton}"
+							type="button"
+							onclick={(event) => {
+								onSelection(option);
+								onclick?.(event);
+							}}
+							onkeypress={(event) => onkeypress?.(event)}
+						>
 							{@html option.label}
 						</button>
 					</li>

@@ -2,7 +2,7 @@ import type { ActionReturn } from 'svelte/action';
 
 // Action: Clipboard
 type ClipboardArgs = string | { element: string } | { input: string };
-type ClipboardAttributes = { 'on:copyComplete'?: () => void };
+type ClipboardAttributes = { oncopyComplete?: (event: CustomEvent<void>) => void };
 export function clipboard(node: HTMLElement, args: ClipboardArgs): ActionReturn<ClipboardArgs, ClipboardAttributes> {
 	if (!window.isSecureContext) {
 		console.error(

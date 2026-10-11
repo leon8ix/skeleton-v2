@@ -3,10 +3,10 @@ import postcssJs from 'postcss-js';
 import { coreConfig, coreUtilities, getSkeletonClasses } from './tailwind/core.js';
 import { themes, getThemeProperties } from './tailwind/themes/index.js';
 import { prefixSelector } from './tailwind/prefixSelector.js';
-import type { CSSRuleObject } from 'tailwindcss/types/config.js';
+import type { CssInJs as CSSRuleObject } from 'postcss-js';
 import type { ConfigOptions, CustomThemeConfig, PresetThemeConfig, ThemeConfig } from './types.js';
 
-const skeleton = plugin.withOptions<ConfigOptions>(
+const skeleton: ReturnType<typeof plugin.withOptions<ConfigOptions>> = plugin.withOptions<ConfigOptions>(
 	// Plugin Creator
 	(options) => {
 		return ({ addBase, addComponents, addUtilities }) => {
@@ -65,7 +65,18 @@ const skeleton = plugin.withOptions<ConfigOptions>(
 
 			addBase(baseStyles);
 			addUtilities(coreUtilities);
-			addComponents(componentStyles, { respectPrefix: false });
+			// Tailwind 4 requires media queries inside their utility selectors.
+			for (const [selector, declarations] of Object.entries(componentStyles)) {
+				if (selector.startsWith('@media')) {
+					for (const rules of Array.isArray(declarations) ? declarations : [declarations]) {
+						for (const [nestedSelector, nestedDeclarations] of Object.entries(rules as CSSRuleObject)) {
+							addComponents({ [nestedSelector]: { [selector]: nestedDeclarations as CSSRuleObject } });
+						}
+					}
+				} else {
+					addComponents({ [selector]: declarations as CSSRuleObject });
+				}
+			}
 		};
 	},
 	// Config
@@ -75,4 +86,5 @@ const skeleton = plugin.withOptions<ConfigOptions>(
 );
 
 export { getThemeProperties, skeleton };
+export { skeletonV2Spacing } from './spacing.js';
 export type { CustomThemeConfig, ConfigOptions, PresetThemeConfig, ThemeConfig };

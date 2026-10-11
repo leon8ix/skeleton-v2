@@ -1,45 +1,21 @@
 <script lang="ts">
 	import TreeViewItem from './TreeViewItem.svelte';
 	import RecursiveTreeViewItem from './RecursiveTreeViewItem.svelte';
-	import type { TreeViewNode } from './types.js';
-	import { createEventDispatcher, getContext, onMount } from 'svelte';
+	import type { TreeViewNode, TreeViewItemHandle } from './types.js';
+	import { getContext, onMount, untrack } from 'svelte';
 
 	// this can't be passed using context, since we have to pass it to recursive children.
-	/** Provide data-driven nodes. */
-	export let nodes: TreeViewNode[] = [];
-
-	/**
-	 * provides id's of expanded nodes
-	 * @type {string[]}
-	 */
-	export let expandedNodes: string[] = [];
-	/**
-	 * provides id's of disabled nodes
-	 * @type {string[]}
-	 */
-	export let disabledNodes: string[] = [];
-	/**
-	 * provides id's of checked nodes
-	 * @type {string[]}
-	 */
-	export let checkedNodes: string[] = [];
-	/**
-	 * provides id's of indeterminate nodes
-	 * @type {string[]}
-	 */
-	export let indeterminateNodes: string[] = [];
 
 	// Context API
-	let selection: boolean = getContext('selection');
-	let multiple: boolean = getContext('multiple');
-	let relational: boolean = getContext('relational');
+	let selection: boolean = getContext<boolean>('selection');
+	let multiple: boolean = getContext<boolean>('multiple');
+	let relational: boolean = getContext<boolean>('relational');
 
 	// Locals
-	let group: unknown = multiple ? [] : '';
-	let name = '';
+	let group: unknown = $state(multiple ? [] : '');
+	let name = $state('');
 
 	// events
-	const dispatch = createEventDispatcher();
 
 	function toggleNode(node: TreeViewNode, open: boolean) {
 		// toggle only nodes with children
@@ -91,24 +67,6 @@
 		}
 	}
 
-	if (selection) {
-		if (multiple) {
-			nodes.forEach((node) => {
-				if (!Array.isArray(group)) return;
-				if (checkedNodes.includes(node.id) && !group.includes(node.id)) {
-					group.push(node.id);
-				}
-			});
-			group = group;
-		} else {
-			nodes.forEach((node) => {
-				if (checkedNodes.includes(node.id) && group !== node.id) {
-					group = node.id;
-				}
-			});
-		}
-	}
-
 	onMount(async () => {
 		if (selection) {
 			// random number as name
@@ -119,9 +77,53 @@
 		}
 	});
 
-	// important to pass children up to items (recursively)
-	export let treeItems: TreeViewItem[] = [];
-	let children: TreeViewItem[][] = [];
+	interface Props {
+		onclick?: ((event: { id: string }) => void) | undefined;
+		ontoggle?: ((event: { id: string }) => void) | undefined;
+		/** Provide data-driven nodes. */
+		nodes?: TreeViewNode[];
+		/** provides id's of expanded nodes */
+		expandedNodes?: string[];
+		/** provides id's of disabled nodes */
+		disabledNodes?: string[];
+		/** provides id's of checked nodes */
+		checkedNodes?: string[];
+		/** provides id's of indeterminate nodes */
+		indeterminateNodes?: string[];
+		// important to pass children up to items (recursively)
+		treeItems?: TreeViewItemHandle[];
+	}
+
+	let {
+		onclick = undefined,
+		ontoggle = undefined,
+		nodes = [],
+		expandedNodes = $bindable([]),
+		disabledNodes = $bindable([]),
+		checkedNodes = $bindable([]),
+		indeterminateNodes = $bindable([]),
+		treeItems = $bindable([])
+	}: Props = $props();
+	untrack(() => {
+		if (selection) {
+			if (multiple) {
+				nodes.forEach((node) => {
+					if (!Array.isArray(group)) return;
+					if (checkedNodes.includes(node.id) && !group.includes(node.id)) {
+						group.push(node.id);
+					}
+				});
+				group = group;
+			} else {
+				nodes.forEach((node) => {
+					if (checkedNodes.includes(node.id) && group !== node.id) {
+						group = node.id;
+					}
+				});
+			}
+		}
+	});
+	let children: TreeViewItemHandle[][] = $state(untrack(() => nodes.map(() => [])));
 </script>
 
 {#if nodes && nodes.length > 0}
@@ -138,31 +140,31 @@
 			disabled={disabledNodes.includes(node.id)}
 			checked={checkedNodes.includes(node.id)}
 			indeterminate={indeterminateNodes.includes(node.id)}
-			on:toggle={(e) => toggleNode(node, e.detail.open)}
-			on:groupChange={(e) => checkNode(node, e.detail.checked, e.detail.indeterminate)}
-			on:click={() =>
-				dispatch('click', {
+			ontoggle={(e) => {
+				toggleNode(node, e.open);
+				ontoggle?.({ id: node.id });
+			}}
+			ongroupChange={(e) => checkNode(node, e.checked, e.indeterminate)}
+			onclick={() =>
+				onclick?.({
 					id: node.id
 				})}
-			on:toggle={() => {
-				dispatch('toggle', {
-					id: node.id
-				});
-			}}
 		>
-			{#if typeof node.content === 'string'}
-				{@html node.content}
-			{:else}
-				<svelte:component this={node.content} {...node.contentProps} />
-			{/if}
-			<svelte:fragment slot="lead">
+			{#snippet content()}
+				{#if typeof node.content === 'string'}
+					{@html node.content}
+				{:else}
+					<node.content {...node.contentProps} />
+				{/if}
+			{/snippet}
+			{#snippet lead()}
 				{#if typeof node.lead === 'string'}
 					{@html node.lead}
-				{:else}
-					<svelte:component this={node.lead} {...node.leadProps} />
+				{:else if node.lead}
+					<node.lead {...node.leadProps} />
 				{/if}
-			</svelte:fragment>
-			<svelte:fragment slot="children">
+			{/snippet}
+			{#snippet childContent()}
 				<RecursiveTreeViewItem
 					nodes={node.children}
 					bind:expandedNodes
@@ -170,16 +172,16 @@
 					bind:checkedNodes
 					bind:indeterminateNodes
 					bind:treeItems={children[i]}
-					on:click={(e) =>
-						dispatch('click', {
-							id: e.detail.id
+					onclick={(e) =>
+						onclick?.({
+							id: e.id
 						})}
-					on:toggle={(e) =>
-						dispatch('toggle', {
-							id: e.detail.id
+					ontoggle={(e) =>
+						ontoggle?.({
+							id: e.id
 						})}
 				/>
-			</svelte:fragment>
+			{/snippet}
 		</TreeViewItem>
 	{/each}
 {/if}

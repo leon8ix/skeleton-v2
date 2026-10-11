@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-
 	// Types
 	import type { CssClasses, SvelteEvent } from '../../index.js';
 
@@ -8,34 +6,62 @@
 	type SlideToggleEvent = {
 		keyup: SvelteEvent<KeyboardEvent, HTMLDivElement>;
 	};
-	const dispatch = createEventDispatcher<SlideToggleEvent>();
-
-	// Props
-	/**
-	 * Required. Set a unique name for the input.
-	 * @type {string}
-	 */
-	export let name: string;
-	/** The checked state of the input element. */
-	export let checked = false;
-
-	// Props (styles)
-	/** Sets the size of the component.
-	 * @type {'sm' | 'md' | 'lg'}
-	 */
-	export let size = 'md';
-	/** Provide classes to set the inactive state background color. */
-	export let background: CssClasses = 'bg-surface-400 dark:bg-surface-700';
-	/** Provide classes to set the active state background color. */
-	export let active: CssClasses = 'bg-surface-900 dark:bg-surface-300';
-	/** Provide classes to set the border styles. */
-	export let border: CssClasses = '';
-	/** Provide classes to set border radius styles. */
-	export let rounded: CssClasses = 'rounded-full';
 
 	// Props (a11y)
-	/** Provide a semantic label. */
-	export let label = '';
+
+	interface Props {
+		disabled?: boolean;
+		class?: string;
+		onkeyup?: ((event: SlideToggleEvent['keyup']) => void) | undefined;
+		onclick?: ((event: MouseEvent) => void) | undefined;
+		onkeydown?: ((event: KeyboardEvent) => void) | undefined;
+		onkeypress?: ((event: KeyboardEvent) => void) | undefined;
+		onmouseover?: ((event: MouseEvent) => void) | undefined;
+		onchange?: ((event: Event) => void) | undefined;
+		onfocus?: ((event: FocusEvent) => void) | undefined;
+		onblur?: ((event: FocusEvent) => void) | undefined;
+		/** Required. Set a unique name for the input. */
+		name: string;
+		/** The checked state of the input element. */
+		checked?: boolean;
+		/** Sets the size of the component. */
+		size?: string;
+		/** Provide classes to set the inactive state background color. */
+		background?: CssClasses;
+		/** Provide classes to set the active state background color. */
+		active?: CssClasses;
+		/** Provide classes to set the border styles. */
+		border?: CssClasses;
+		/** Provide classes to set border radius styles. */
+		rounded?: CssClasses;
+		/** Provide a semantic label. */
+		label?: string;
+		children?: import('svelte').Snippet;
+		[key: string]: any;
+	}
+
+	let {
+		disabled: disabledAttribute = false,
+		class: className = '',
+		onkeyup = undefined,
+		onclick = undefined,
+		onkeydown = undefined,
+		onkeypress = undefined,
+		onmouseover = undefined,
+		onchange = undefined,
+		onfocus = undefined,
+		onblur = undefined,
+		name,
+		checked = $bindable(false),
+		size = 'md',
+		background = 'bg-surface-400 dark:bg-surface-700',
+		active = 'bg-surface-900 dark:bg-surface-300',
+		border = '',
+		rounded = 'rounded-full',
+		label = '',
+		children,
+		...rest
+	}: Props = $props();
 
 	// Base Styles
 	const cBase = 'inline-block';
@@ -44,13 +70,7 @@
 	const cThumb = 'w-[50%] h-full scale-[0.8] transition-all duration-[200ms] shadow';
 
 	// Set track size
-	let trackSize: string;
-	// prettier-ignore
-	switch (size) {
-		case 'sm': trackSize = 'w-12 h-6'; break;
-		case 'lg': trackSize = 'w-20 h-10'; break;
-		default: trackSize = 'w-16 h-8';
-	}
+	let trackSize = $derived(size === 'sm' ? 'w-12 h-6' : size === 'lg' ? 'w-20 h-10' : 'w-16 h-8');
 
 	// A11y Input Handlers
 	function onKeyDown(event: SvelteEvent<KeyboardEvent, HTMLDivElement>) {
@@ -58,28 +78,29 @@
 		if (['Enter', 'Space'].includes(event.code)) {
 			event.preventDefault();
 			/** @event {{ event }} keyup Fires when the component is focused and key is pressed. */
-			dispatch('keyup', event);
+			onkeyup?.(event);
 			const inputElem = event.currentTarget.firstChild as HTMLLabelElement;
 			inputElem.click();
 		}
 	}
 
 	// Interactive
-	$: cTrackActive = checked ? active : `${background} cursor-pointer`;
-	$: cThumbBackground = checked ? 'bg-white/75' : 'bg-white';
-	$: cThumbPos = checked ? 'translate-x-full' : '';
+	let cTrackActive = $derived(checked ? active : `${background} cursor-pointer`);
+	let cThumbBackground = $derived(checked ? 'bg-white/75' : 'bg-white');
+	let cThumbPos = $derived(checked ? 'translate-x-full' : '');
 
 	// Reactive Classes
-	$: classesDisabled = $$props.disabled === true ? 'opacity-50' : 'hover:brightness-[105%] dark:hover:brightness-110 cursor-pointer';
-	$: classesBase = `${cBase} ${rounded} ${classesDisabled} ${$$props.class ?? ''}`;
-	$: classesLabel = `${cLabel}`;
-	$: classesTrack = `${cTrack} ${border} ${rounded} ${trackSize} ${cTrackActive}`;
-	$: classesThumb = `${cThumb} ${rounded} ${cThumbBackground} ${cThumbPos}`;
+	let classesDisabled = $derived(
+		disabledAttribute === true ? 'opacity-50' : 'hover:brightness-[105%] dark:hover:brightness-110 cursor-pointer'
+	);
+	let classesBase = $derived(`${cBase} ${rounded} ${classesDisabled} ${className ?? ''}`);
+	let classesLabel = $derived(`${cLabel}`);
+	let classesTrack = $derived(`${cTrack} ${border} ${rounded} ${trackSize} ${cTrackActive}`);
+	let classesThumb = $derived(`${cThumb} ${rounded} ${cThumbBackground} ${cThumbPos}`);
 
-	// Prune $$restProps to avoid overwriting $$props.class
+	// Prune $$restProps to avoid overwriting className
 	function prunedRestProps() {
-		delete $$restProps.class;
-		return $$restProps;
+		return rest;
 	}
 </script>
 
@@ -87,7 +108,7 @@
 	id={label}
 	class="slide-toggle {classesBase}"
 	data-testid="slide-toggle"
-	on:keydown={onKeyDown}
+	onkeydown={onKeyDown}
 	role="switch"
 	aria-label={label}
 	aria-checked={checked}
@@ -100,22 +121,22 @@
 			class="slide-toggle-input hidden"
 			bind:checked
 			{name}
-			on:click
-			on:keydown
-			on:keyup
-			on:keypress
-			on:mouseover
-			on:change
-			on:focus
-			on:blur
+			onclick={(event) => onclick?.(event)}
+			onkeydown={(event) => onkeydown?.(event)}
+			onkeyup={(event) => onkeyup?.(event)}
+			onkeypress={(event) => onkeypress?.(event)}
+			onmouseover={(event) => onmouseover?.(event)}
+			onchange={(event) => onchange?.(event)}
+			onfocus={(event) => onfocus?.(event)}
+			onblur={(event) => onblur?.(event)}
 			{...prunedRestProps()}
-			disabled={$$props.disabled}
+			disabled={disabledAttribute}
 		/>
 		<!-- Slider Track/Thumb -->
-		<div class="slide-toggle-track {classesTrack}" class:cursor-not-allowed={$$props.disabled}>
-			<div class="slide-toggle-thumb {classesThumb}" class:cursor-not-allowed={$$props.disabled}></div>
+		<div class="slide-toggle-track {classesTrack}" class:cursor-not-allowed={disabledAttribute}>
+			<div class="slide-toggle-thumb {classesThumb}" class:cursor-not-allowed={disabledAttribute}></div>
 		</div>
 		<!-- Label -->
-		{#if $$slots.default}<div class="slide-toggle-text ml-3"><slot /></div>{/if}
+		{#if children}<div class="slide-toggle-text ml-3">{@render children?.()}</div>{/if}
 	</label>
 </div>

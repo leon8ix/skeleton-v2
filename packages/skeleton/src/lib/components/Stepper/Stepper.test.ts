@@ -1,8 +1,6 @@
 import { render } from '@testing-library/svelte';
 import { describe, it, expect } from 'vitest';
 
-import { writable } from 'svelte/store';
-
 import Stepper from '$lib/components/Stepper/Stepper.svelte';
 
 describe('Stepper.svelte', () => {
@@ -14,15 +12,12 @@ describe('Stepper.svelte', () => {
 	it('Renders with all props', () => {
 		const { getByTestId } = render(Stepper, {
 			props: {
-				active: writable(0),
-				length: 0,
+				active: 'variant-filled-primary',
 				// Props (timeline)
-				color: 'text-white',
-				background: 'bg-secondary-500 text-white',
 				// Props (buttons)
-				buttonBack: {},
-				buttonNext: {},
-				buttonComplete: {}
+				buttonBack: 'variant-filled',
+				buttonNext: 'variant-filled',
+				buttonComplete: 'variant-filled'
 			}
 		});
 		expect(getByTestId('stepper')).toBeTruthy();

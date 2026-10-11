@@ -1,29 +1,49 @@
 <script lang="ts">
 	// Slots
-	/**
-	 * @slot lead - Appears above the default label, useful for icons.
-	 */
+	/** @slot lead - Appears above the default label, useful for icons. */
 
 	import { getContext } from 'svelte';
 
 	// Types
 	import type { CssClasses } from '../../index.js';
 
-	// Props
-	/** Enables the active state styles when set true. */
-	export let selected = false;
-
 	// Props (region)
-	/** Provide arbitrary classes to style the lead region. */
-	export let regionLead: CssClasses = 'flex justify-center items-center';
-	/** Provide arbitrary classes to style the label region. */
-	export let regionLabel: CssClasses = '';
 
-	// Context
-	export let hover: CssClasses = getContext('hover');
-	export let active: CssClasses = getContext('active');
-	export let spacing: CssClasses = getContext('spacing');
-	export let aspectRatio: CssClasses = getContext('aspectRatio');
+	interface Props {
+		class?: string;
+		href?: string;
+		onclick?: ((event: MouseEvent) => void) | undefined;
+		/** Enables the active state styles when set true. */
+		selected?: boolean;
+		/** Provide arbitrary classes to style the lead region. */
+		regionLead?: CssClasses;
+		/** Provide arbitrary classes to style the label region. */
+		regionLabel?: CssClasses;
+		// Context
+		hover?: CssClasses;
+		active?: CssClasses;
+		spacing?: CssClasses;
+		aspectRatio?: CssClasses;
+		lead?: import('svelte').Snippet;
+		children?: import('svelte').Snippet;
+		[key: string]: any;
+	}
+
+	let {
+		class: className = '',
+		href: hrefAttribute = '',
+		onclick = undefined,
+		selected = false,
+		regionLead = 'flex justify-center items-center',
+		regionLabel = '',
+		hover = getContext<NonNullable<Props['hover']>>('hover'),
+		active = getContext<NonNullable<Props['active']>>('active'),
+		spacing = getContext<NonNullable<Props['spacing']>>('spacing'),
+		aspectRatio = getContext<NonNullable<Props['aspectRatio']>>('aspectRatio'),
+		lead,
+		children,
+		...rest
+	}: Props = $props();
 
 	// Classes
 	const cBase = 'unstyled';
@@ -31,23 +51,28 @@
 	const cLabel = 'font-bold text-xs';
 
 	// State
-	$: classActive = selected ? active : '';
+	let classActive = $derived(selected ? active : '');
 	// Reactive
-	$: classesBase = `${cBase} ${$$props.class || ''}`;
-	$: classesWrapper = `${cWrapper} ${aspectRatio} ${hover} ${spacing} ${classActive}`;
-	$: classesLead = `${regionLead}`;
-	$: classesLabel = `${cLabel} ${regionLabel}`;
+	let classesBase = $derived(`${cBase} ${className || ''}`);
+	let classesWrapper = $derived(`${cWrapper} ${aspectRatio} ${hover} ${spacing} ${classActive}`);
+	let classesLead = $derived(`${regionLead}`);
+	let classesLabel = $derived(`${cLabel} ${regionLabel}`);
 
 	// RestProps
 	function prunedRestProps() {
-		delete $$restProps.class;
-		return $$restProps;
+		return rest;
 	}
 </script>
 
-<a class="app-rail-anchor {classesBase}" href={$$props.href} {...prunedRestProps()} data-testid="app-rail-anchor" on:click>
+<a
+	class="app-rail-anchor {classesBase}"
+	href={hrefAttribute}
+	{...prunedRestProps()}
+	data-testid="app-rail-anchor"
+	onclick={(event) => onclick?.(event)}
+>
 	<div class="app-rail-wrapper {classesWrapper}">
-		{#if $$slots.lead}<div class="app-rail-lead {classesLead}"><slot name="lead" /></div>{/if}
-		<div class="app-rail-label {classesLabel}"><slot /></div>
+		{#if lead}<div class="app-rail-lead {classesLead}">{@render lead?.()}</div>{/if}
+		<div class="app-rail-label {classesLabel}">{@render children?.()}</div>
 	</div>
 </a>

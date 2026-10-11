@@ -20,7 +20,7 @@ describe('TreeItem.svelte', () => {
 				caretOpen: 'rotate-180',
 				caretClosed: 'rotate-90',
 				regionSummary: 'bg-red-600',
-				regionCaret: 'bg-red-600',
+				regionSymbol: 'bg-red-600',
 				regionChildren: 'bg-red-600'
 			}
 		});

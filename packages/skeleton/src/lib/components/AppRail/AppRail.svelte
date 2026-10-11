@@ -1,50 +1,70 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	// Slots
-	/**
-	 * @slot lead - Provides content at the top of the rail, e.g. a logo.
-	 * @slot trail - Provides content at the bottom of the rail, e.g. account.
-	 */
+	/** @slot lead - Provides content at the top of the rail, e.g. a logo. @slot trail - Provides content at the bottom of the rail, e.g. account. */
 
 	import { setContext } from 'svelte';
 
 	// Types
 	import type { CssClasses } from '../../index.js';
 
-	// Props (rail)
-	/** Rail: Provide classes to set the background color. */
-	export let background: CssClasses = 'bg-surface-100-800-token';
-	/** Rail: Provide classes to set the border color. */
-	export let border: CssClasses = '';
-	/** Rail: Provide classes to set the width. */
-	export let width: CssClasses = 'w-20';
-	/** Rail: Provide classes to set the height. */
-	export let height: CssClasses = 'h-full';
-	/** Rail: Provide a class to set the grid gap. */
-	export let gap: CssClasses = 'gap-0';
-
-	// Props (regions)
-	/** Rail: Provide arbitrary classes to the lead region. */
-	export let regionLead: CssClasses = '';
-	/** Rail: Provide arbitrary classes to the default region. */
-	export let regionDefault: CssClasses = '';
-	/** Rail: Provide arbitrary classes to the trail region. */
-	export let regionTrail: CssClasses = '';
-
 	// Props (tiles/anchors)
-	/** Provide classes to set the tile/anchor hover background color. */
-	export let hover: CssClasses = 'bg-primary-hover-token';
-	/** Provide classes to set the tile/anchor active tile background. */
-	export let active: CssClasses = 'bg-primary-active-token';
-	/** Provide classes to set the tile/anchor vertical spacing. */
-	export let spacing: CssClasses = 'space-y-1';
-	/** Provide classes to set the tile/anchor aspect ratio. */
-	export let aspectRatio: CssClasses = 'aspect-square';
+
+	interface Props {
+		class?: string;
+		/** Rail: Provide classes to set the background color. */
+		background?: CssClasses;
+		/** Rail: Provide classes to set the border color. */
+		border?: CssClasses;
+		/** Rail: Provide classes to set the width. */
+		width?: CssClasses;
+		/** Rail: Provide classes to set the height. */
+		height?: CssClasses;
+		/** Rail: Provide a class to set the grid gap. */
+		gap?: CssClasses;
+		/** Rail: Provide arbitrary classes to the lead region. */
+		regionLead?: CssClasses;
+		/** Rail: Provide arbitrary classes to the default region. */
+		regionDefault?: CssClasses;
+		/** Rail: Provide arbitrary classes to the trail region. */
+		regionTrail?: CssClasses;
+		/** Provide classes to set the tile/anchor hover background color. */
+		hover?: CssClasses;
+		/** Provide classes to set the tile/anchor active tile background. */
+		active?: CssClasses;
+		/** Provide classes to set the tile/anchor vertical spacing. */
+		spacing?: CssClasses;
+		/** Provide classes to set the tile/anchor aspect ratio. */
+		aspectRatio?: CssClasses;
+		lead?: import('svelte').Snippet;
+		children?: import('svelte').Snippet;
+		trail?: import('svelte').Snippet;
+	}
+
+	let {
+		class: className = '',
+		background = 'bg-surface-100-800-token',
+		border = '',
+		width = 'w-20',
+		height = 'h-full',
+		gap = 'gap-0',
+		regionLead = '',
+		regionDefault = '',
+		regionTrail = '',
+		hover = 'bg-primary-hover-token',
+		active = 'bg-primary-active-token',
+		spacing = 'space-y-1',
+		aspectRatio = 'aspect-square',
+		lead,
+		children,
+		trail
+	}: Props = $props();
 
 	// Context
-	setContext('active', active);
-	setContext('hover', hover);
-	setContext('spacing', spacing);
-	setContext('aspectRatio', aspectRatio);
+	untrack(() => setContext('active', active));
+	untrack(() => setContext('hover', hover));
+	untrack(() => setContext('spacing', spacing));
+	untrack(() => setContext('aspectRatio', aspectRatio));
 
 	// Base Classes
 	const cBase = 'grid grid-rows-[auto_1fr_auto] overflow-y-auto';
@@ -53,19 +73,19 @@
 	const cRegionTrail = 'box-border';
 
 	// Reactive
-	$: classesBase = `${cBase} ${background} ${border} ${width} ${height} ${gap} ${$$props.class || ''}`;
-	$: classesRegionLead = `${cRegionLead} ${regionLead}`;
-	$: classesRegionDefault = `${cRegionDefault} ${regionDefault}`;
-	$: classesRegionTrail = `${cRegionTrail} ${regionTrail}`;
+	let classesBase = $derived(`${cBase} ${background} ${border} ${width} ${height} ${gap} ${className || ''}`);
+	let classesRegionLead = $derived(`${cRegionLead} ${regionLead}`);
+	let classesRegionDefault = $derived(`${cRegionDefault} ${regionDefault}`);
+	let classesRegionTrail = $derived(`${cRegionTrail} ${regionTrail}`);
 </script>
 
 <!-- @component A vertical navigation rail component. -->
 
 <div class="app-rail {classesBase}" data-testid="app-rail">
 	<!-- Slot: lead -->
-	<div class="app-bar-lead {classesRegionLead}"><slot name="lead" /></div>
+	<div class="app-bar-lead {classesRegionLead}">{@render lead?.()}</div>
 	<!-- Slot: Default -->
-	<div class="app-bar-default {classesRegionDefault}"><slot /></div>
+	<div class="app-bar-default {classesRegionDefault}">{@render children?.()}</div>
 	<!-- Slot: lead -->
-	<div class="app-bar-trail {classesRegionTrail}"><slot name="trail" /></div>
+	<div class="app-bar-trail {classesRegionTrail}">{@render trail?.()}</div>
 </div>

@@ -1,22 +1,19 @@
 {
-	"name": "@skeletonlabs/tw-plugin",
+	"name": "@leon8ix/skeleton-v2-tailwind",
 	"version": "0.4.1",
 	"description": "Core plugin for Skeleton.",
 	"scripts": {
-		"build": "tsx ./scripts/generate-jss.ts && tsup",
-		"sync": "pnpm build:jss && tsup",
-		"package": "pnpm build:jss && tsup",
-		"lint": "prettier --ignore-path .prettierignore --check --plugin-search-dir=. . && eslint --fix --ignore-path .gitignore .",
-		"format": "prettier --ignore-path .prettierignore --write --plugin-search-dir=. .",
-		"build:jss": "tsx ./scripts/generate-jss.ts",
-		"convert": "tsx ./scripts/convert-theme.ts && pnpm format"
+		"build": "tsx ./scripts/generate-jss.ts && esbuild src/index.ts --bundle --platform=node --format=cjs --target=node24 --packages=external --outfile=dist/index.js && tsc -p tsconfig.build.json",
+		"check": "tsc --noEmit",
+		"test": "vitest run",
+		"format": "prettier --write ."
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/skeletonlabs/skeleton.git"
+		"url": "https://github.com/leon8ix/skeleton-v2.git"
 	},
 	"bugs": {
-		"url": "https://github.com/skeletonlabs/skeleton/issues"
+		"url": "https://github.com/leon8ix/skeleton-v2/issues"
 	},
 	"keywords": [
 		"cli",
@@ -35,26 +32,17 @@
 	"license": "MIT",
 	"homepage": "https://skeleton.dev/",
 	"devDependencies": {
-		"@types/node": "18.16.16",
-		"@types/postcss-import": "^14.0.0",
-		"@typescript-eslint/eslint-plugin": "5.59.9",
-		"@typescript-eslint/parser": "5.59.9",
-		"eslint": "8.42.0",
-		"eslint-config-prettier": "8.8.0",
-		"postcss": "8.4.24",
-		"postcss-import": "15.1.0",
-		"postcss-js": "4.0.1",
-		"postcss-load-config": "4.0.1",
-		"postcss-selector-parser": "^6.0.13",
-		"prettier": "2.8.8",
-		"tailwindcss": "3.3.2",
-		"tslib": "2.5.3",
-		"tsup": "^6.7.0",
-		"tsx": "^3.12.7",
-		"typescript": "5.0.3"
+		"@types/postcss-js": "^4.1.0",
+		"postcss": "^8.5.29",
+		"tsx": "^4.23.15",
+		"tailwindcss": "^4.3.3",
+		"@tailwindcss/postcss": "^4.3.3",
+		"vitest": "^5.0.3",
+		"esbuild": "^0.28.2"
 	},
 	"peerDependencies": {
-		"tailwindcss": ">=3.0.0"
+		"tailwindcss": "^4.3.3",
+		"postcss": "^8.5.29"
 	},
 	"type": "commonjs",
 	"main": "./dist/index.js",
@@ -63,6 +51,14 @@
 		"./dist/**/*.js",
 		"./dist/**/*.d.ts",
 		"./dist/**/*.cjs",
-		"./dist/**/*.d.cts"
-	]
+		"./dist/**/*.d.cts",
+		"!./dist/**/*.test.*",
+		"./src/styles/*.css",
+		"LICENSE",
+		"LICENSE-TAILWIND"
+	],
+	"dependencies": {
+		"postcss-js": "^5.1.0",
+		"postcss-selector-parser": "^7.1.6"
+	}
 }

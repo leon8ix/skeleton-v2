@@ -9,7 +9,7 @@ const mockState = writable({ current: 1, total: 1 }); // NOTE: current/total mus
 
 describe('Step.svelte', () => {
 	it('Renders with mininal props', async () => {
-		const { getByTestId } = render(Step, { props: { state: mockState, index: 0 } });
+		const { getByTestId } = render(Step, { props: { state: mockState } });
 		expect(getByTestId('step')).toBeTruthy();
 	});
 
@@ -17,7 +17,6 @@ describe('Step.svelte', () => {
 		const { getByTestId } = render(Step, {
 			props: {
 				state: mockState,
-				index: 0,
 				locked: false
 			}
 		});

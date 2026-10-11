@@ -1,45 +1,72 @@
 <script lang="ts">
 	// Slots
-	/**
-	 * @slot lead - Appears above the default label, useful for icons.
-	 */
+	/** @slot lead - Appears above the default label, useful for icons. */
 
 	import { getContext } from 'svelte';
 
 	// Types
 	import type { CssClasses, SvelteEvent } from '../../index.js';
 
-	// Props
-	/**
-	 * Set the radio group binding value.
-	 * @type {any}
-	 * */
-	export let group: any;
-	/**
-	 * Set a unique name value for the input.
-	 * @type {string}
-	 * */
-	export let name: string;
-	/**
-	 * Set the input's value.
-	 * @type {any}
-	 * */
-	export let value: any;
-	/** Provide a hoverable title attribute for the tile. */
-	export let title = '';
-
 	// Props (region)
-	/** Provide arbitrary classes to style the lead region. */
-	export let regionLead: CssClasses = '';
-	/** Provide arbitrary classes to style the label region. */
-	export let regionLabel: CssClasses = '';
 
-	// Context
-	export let hover: CssClasses = getContext('hover');
-	export let active: CssClasses = getContext('active');
-	export let spacing: CssClasses = getContext('spacing');
-	export let width: CssClasses = getContext('width');
-	export let aspectRatio: CssClasses = getContext('aspectRatio');
+	interface Props {
+		class?: string;
+		onmouseover?: ((event: MouseEvent) => void) | undefined;
+		onmouseleave?: ((event: MouseEvent) => void) | undefined;
+		onfocus?: ((event: FocusEvent) => void) | undefined;
+		onblur?: ((event: FocusEvent) => void) | undefined;
+		onclick?: ((event: MouseEvent) => void) | undefined;
+		onkeyup?: ((event: KeyboardEvent) => void) | undefined;
+		onkeypress?: ((event: KeyboardEvent) => void) | undefined;
+		onchange?: ((event: Event) => void) | undefined;
+		/** Set the radio group binding value. */
+		group: any;
+		/** Set a unique name value for the input. */
+		name: string;
+		/** Set the input's value. */
+		value: any;
+		/** Provide a hoverable title attribute for the tile. */
+		title?: string;
+		/** Provide arbitrary classes to style the lead region. */
+		regionLead?: CssClasses;
+		/** Provide arbitrary classes to style the label region. */
+		regionLabel?: CssClasses;
+		// Context
+		hover?: CssClasses;
+		active?: CssClasses;
+		spacing?: CssClasses;
+		width?: CssClasses;
+		aspectRatio?: CssClasses;
+		lead?: import('svelte').Snippet;
+		children?: import('svelte').Snippet;
+		[key: string]: any;
+	}
+
+	let {
+		class: className = '',
+		onmouseover = undefined,
+		onmouseleave = undefined,
+		onfocus = undefined,
+		onblur = undefined,
+		onclick = undefined,
+		onkeyup = undefined,
+		onkeypress = undefined,
+		onchange = undefined,
+		group = $bindable(),
+		name,
+		value,
+		title = '',
+		regionLead = '',
+		regionLabel = '',
+		hover = getContext<NonNullable<Props['hover']>>('hover'),
+		active = getContext<NonNullable<Props['active']>>('active'),
+		spacing = getContext<NonNullable<Props['spacing']>>('spacing'),
+		width = getContext<NonNullable<Props['width']>>('width'),
+		aspectRatio = getContext<NonNullable<Props['aspectRatio']>>('aspectRatio'),
+		lead,
+		children,
+		...rest
+	}: Props = $props();
 
 	// Classes
 	const cBase = 'cursor-pointer';
@@ -48,16 +75,16 @@
 	const cLabel = 'font-bold text-xs';
 
 	// Local
-	let elemInput: HTMLElement;
+	let elemInput = $state<HTMLElement>();
 
 	// State
-	$: classActive = group === value ? active : '';
+	let classActive = $derived(group === value ? active : '');
 	// Reactive
-	$: classesBase = `${cBase} ${$$props.class || ''}`;
-	$: classesWrapper = `${cWrapper} ${aspectRatio} ${width} ${hover} ${classActive}`;
-	$: classesInterface = `${cInterface} ${spacing}`;
-	$: classesLead = `${regionLead}`;
-	$: classesLabel = `${cLabel} ${regionLabel}`;
+	let classesBase = $derived(`${cBase} ${className || ''}`);
+	let classesWrapper = $derived(`${cWrapper} ${aspectRatio} ${width} ${hover} ${classActive}`);
+	let classesInterface = $derived(`${cInterface} ${spacing}`);
+	let classesLead = $derived(`${regionLead}`);
+	let classesLabel = $derived(`${cLabel} ${regionLabel}`);
 
 	// A11y Key Down Handler
 	function onKeyDown(event: SvelteEvent<KeyboardEvent, HTMLButtonElement>): void {
@@ -68,29 +95,56 @@
 	}
 
 	function selectElemInput(): void {
-		elemInput.click();
+		elemInput?.click();
 	}
 
 	// RestProps
 	function prunedRestProps() {
-		delete $$restProps.class;
-		return $$restProps;
+		return rest;
 	}
 </script>
 
-<label class="app-rail-tile {classesBase}" data-testid="app-rail-tile" {title} on:mouseover on:mouseleave on:focus on:blur>
+<label
+	class="app-rail-tile {classesBase}"
+	data-testid="app-rail-tile"
+	{title}
+	onmouseover={(event) => onmouseover?.(event)}
+	onmouseleave={(event) => onmouseleave?.(event)}
+	onfocus={(event) => onfocus?.(event)}
+	onblur={(event) => onblur?.(event)}
+>
 	<!-- A11y attributes are not allowed on <label> -->
 	<!-- FIXME: resolve a11y warnings -->
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<button class="app-rail-wrapper {classesWrapper}" tabindex="0" on:click={selectElemInput} on:click on:keydown={onKeyDown} on:keyup on:keypress>
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<button
+		class="app-rail-wrapper {classesWrapper}"
+		tabindex="0"
+		onclick={(event) => {
+			selectElemInput();
+			onclick?.(event);
+		}}
+		onkeydown={onKeyDown}
+		onkeyup={(event) => onkeyup?.(event)}
+		onkeypress={(event) => onkeypress?.(event)}
+	>
 		<!-- NOTE: Don't use `hidden` as it prevents `required` from operating -->
 		<div class="h-0 w-0 overflow-hidden">
-			<input bind:this={elemInput} type="radio" bind:group {name} {value} {...prunedRestProps()} tabindex="-1" on:click on:change />
+			<input
+				bind:this={elemInput}
+				type="radio"
+				bind:group
+				{name}
+				{value}
+				{...prunedRestProps()}
+				tabindex="-1"
+				onclick={(event) => onclick?.(event)}
+				onchange={(event) => onchange?.(event)}
+			/>
 		</div>
 		<!-- Interface -->
 		<div class="app-rail-interface {classesInterface}">
-			{#if $$slots.lead}<div class="app-rail-lead {classesLead}"><slot name="lead" /></div>{/if}
-			<div class="app-rail-label {classesLabel}"><slot /></div>
+			{#if lead}<div class="app-rail-lead {classesLead}">{@render lead?.()}</div>{/if}
+			<div class="app-rail-label {classesLabel}">{@render children?.()}</div>
 		</div>
 	</button>
 </label>

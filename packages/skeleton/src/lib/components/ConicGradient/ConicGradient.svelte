@@ -1,39 +1,50 @@
 <script lang="ts">
-	import { afterUpdate } from 'svelte';
 	import { tailwindDefaultColors } from './settings.js';
 
 	// Types
 	import type { CssClasses } from '../../index.js';
 	import type { ConicStop } from './types.js';
 
-	// Props
-	/**
-	 * Provide a data set of color stops and labels.
-	 * @type {ConicStop[]}
-	 */
-	export let stops: ConicStop[] = [{ color: ['neutral', 500], start: 0, end: 100 }];
-	/** Enable a contextual legend. */
-	export let legend = false;
-	/** When enabled, the conic gradient will spin. */
-	export let spin = false;
-	/** Style the conic gradient width. */
-	export let width: CssClasses = 'w-24';
-	/** Style the legend hover effect. */
-	export let hover: CssClasses = 'bg-primary-hover-token';
-	/** Set the number of digits on the legend values. */
-	export let digits = 0;
-
 	// Props (regions)
-	/** Style the caption region above the gradient. */
-	export let regionCaption: CssClasses = '';
-	/** Style the conic gradient region. */
-	export let regionCone: CssClasses = '';
-	/** Style the legend region below the gradient. */
-	export let regionLegend: CssClasses = '';
+
+	interface Props {
+		class?: string;
+		/** Provide a data set of color stops and labels. */
+		stops?: ConicStop[];
+		/** Enable a contextual legend. */
+		legend?: boolean;
+		/** When enabled, the conic gradient will spin. */
+		spin?: boolean;
+		/** Style the conic gradient width. */
+		width?: CssClasses;
+		/** Style the legend hover effect. */
+		hover?: CssClasses;
+		/** Set the number of digits on the legend values. */
+		digits?: number;
+		/** Style the caption region above the gradient. */
+		regionCaption?: CssClasses;
+		/** Style the conic gradient region. */
+		regionCone?: CssClasses;
+		/** Style the legend region below the gradient. */
+		regionLegend?: CssClasses;
+		children?: import('svelte').Snippet;
+	}
+
+	let {
+		class: className = '',
+		stops = [{ color: ['neutral', 500], start: 0, end: 100 }],
+		legend = false,
+		spin = false,
+		width = 'w-24',
+		hover = 'bg-primary-hover-token',
+		digits = 0,
+		regionCaption = '',
+		regionCone = '',
+		regionLegend = '',
+		children
+	}: Props = $props();
 
 	// Local
-	let cone: string;
-	let generatedLegendList: any[];
 
 	// Styles
 	const cBase = 'flex flex-col items-center space-y-4 w-';
@@ -51,41 +62,21 @@
 		return colorSet?.shades[color[1]].hex;
 	}
 
-	// Generate Conic Gradient style
-	function genConicGradient(): void {
-		let d: any = stops.map((v) => `${setColorValue(v.color)} ${v.start}% ${v.end}%`);
-		cone = `conic-gradient(${d.join(', ')})`;
-	}
-
-	// Generate Legend
-	function genLegend(): any {
-		if (!legend) return;
-		generatedLegendList = stops.map((v) => {
-			return {
-				label: v.label,
-				color: setColorValue(v.color),
-				value: (v.end - v.start).toFixed(digits)
-			};
-		});
-	}
-
-	// Lifecycle (on init)
-	afterUpdate(() => {
-		genConicGradient();
-		genLegend();
-	});
-
+	let cone = $derived('conic-gradient(' + stops.map((v) => `${setColorValue(v.color)} ${v.start}% ${v.end}%`).join(', ') + ')');
+	let generatedLegendList = $derived(
+		legend ? stops.map((v) => ({ label: v.label, color: setColorValue(v.color), value: (v.end - v.start).toFixed(digits) })) : []
+	);
 	// Reactive
-	$: classesBase = `${cBase} ${$$props.class ?? ''}`;
-	$: classesCaption = `${cCaption} ${regionCaption}`;
-	$: classesCone = `${cCone} ${width} ${regionCone}`;
-	$: classesLegend = `${cLegend} ${regionLegend}`;
+	let classesBase = $derived(`${cBase} ${className ?? ''}`);
+	let classesCaption = $derived(`${cCaption} ${regionCaption}`);
+	let classesCone = $derived(`${cCone} ${width} ${regionCone}`);
+	let classesLegend = $derived(`${cLegend} ${regionLegend}`);
 </script>
 
 <figure class="conic-gradient {classesBase}" data-testid="conic-gradient">
 	<!-- Label -->
-	{#if $$slots.default}
-		<figcaption class="conic-caption {classesCaption}"><slot /></figcaption>
+	{#if children}
+		<figcaption class="conic-caption {classesCaption}">{@render children?.()}</figcaption>
 	{/if}
 	<!-- Conic Gradient -->
 	{#if cone}

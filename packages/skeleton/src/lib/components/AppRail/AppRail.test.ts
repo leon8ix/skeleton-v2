@@ -2,7 +2,6 @@ import { render } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
 
 import AppRail from '$lib/components/AppRail/AppRail.svelte';
-import { readable } from 'svelte/store';
 
 describe('AppRail.svelte', () => {
 	it('Renders with minimal props', async () => {
@@ -13,7 +12,6 @@ describe('AppRail.svelte', () => {
 	it('Renders with all props', async () => {
 		const { getByTestId } = render(AppRail, {
 			props: {
-				selected: readable('/'),
 				background: 'bg-primary-500',
 				border: 'border-primary-500',
 				active: 'bg-primary-500',

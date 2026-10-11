@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 	import { fly, scale } from 'svelte/transition';
 	import { type Transition, type TransitionParams, prefersReducedMotionStore } from '../../index.js';
 	import { dynamicTransition } from '../../internal/transitions.js';
@@ -18,7 +18,7 @@
 	lang="ts"
 	generics="ListTransitionIn extends Transition = FlyTransition, ListTransitionOut extends Transition = FlyTransition, ChipTransitionIn extends Transition = ScaleTransition, ChipTransitionOut extends Transition = ScaleTransition"
 >
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { flip } from 'svelte/animate';
 
 	// Types
@@ -33,112 +33,131 @@
 		invalid: { event: KeyboardEvent; input: string };
 		invalidManually: { input: string };
 	};
-	const dispatch = createEventDispatcher<InputChipEvent>();
-
-	// Props
-	/** Bind the input value. */
-	export let input = '';
-	/**
-	 * Set a unique select input name.
-	 * @type {string}
-	 */
-	export let name: string;
-	/** An array of values. */
-	export let value: any[] = [];
-	/**
-	 * Provide a whitelist of accepted values.
-	 * @type {string[]}
-	 */
-	export let whitelist: string[] = [];
-	/** Maximum number of chips. Set -1 to disable. */
-	export let max = -1;
-	/** Set the minimum character length. */
-	export let minlength = -1;
-	/** Set the maximum character length. */
-	export let maxlength = -1;
-	/** When enabled, allows for uppercase values. */
-	export let allowUpperCase = false;
-	/** When enabled, allows for duplicate values. */
-	export let allowDuplicates = false;
-	/**
-	 * Provide a custom validator function.
-	 * @type {function}
-	 */
-	export let validation: (...args: any[]) => boolean = () => true;
-
-	/** The duration of the flip (first, last, invert, play) animation. */
-	export let duration = 150;
-	/** Set the required state for this input field. */
-	export let required = false;
-
-	// Props (styles)
-	/** Provide classes or a variant to style the chips. */
-	export let chips: CssClasses = 'variant-filled';
-	/** Provide classes used to indicate invalid state. */
-	export let invalid: CssClasses = 'input-error';
-	/** Provide classes to set padding styles. */
-	export let padding: CssClasses = 'p-2';
-	/** Provide classes to set border radius styles. */
-	export let rounded: CssClasses = 'rounded-container-token';
-
-	// Props (regions)
-	/** Provide arbitrary classes to style the chip wrapper region. */
-	export let regionChipWrapper: CssClasses = '';
-	/** Provide arbitrary classes to style the chip list region. */
-	export let regionChipList: CssClasses = '';
-	/** Provide arbitrary classes to style the input field region. */
-	export let regionInput: CssClasses = '';
-
-	// Props (A11y)
-	/** Provide the ARIA label for the select input. */
-	export let label = 'Chips select';
 
 	// Props (transition)
-	/**
-	 * Enable/Disable transitions
-	 * @type {boolean}
-	 */
-	export let transitions = !$prefersReducedMotionStore;
-	/**
-	 * Provide the transition used in list on entry.
-	 * @type {ListTransitionIn}
-	 */
-	export let listTransitionIn: ListTransitionIn = fly as ListTransitionIn;
-	/**
-	 * Transition params provided to `ListTransitionIn`.
-	 * @type {TransitionParams}
-	 */
-	export let listTransitionInParams: TransitionParams<ListTransitionIn> = { duration: 150, opacity: 0, y: -20 };
-	/**
-	 * Provide the transition used in list on exit.
-	 * @type {ListTransitionOut}
-	 */
-	export let listTransitionOut: ListTransitionOut = fly as ListTransitionOut;
-	/**
-	 * Transition params provided to `ListTransitionOut`.
-	 * @type {TransitionParams}
-	 */
-	export let listTransitionOutParams: TransitionParams<ListTransitionOut> = { duration: 150, opacity: 0, y: -20 };
-	/**
-	 * Provide the transition used in chip on entry.
-	 * @type {ChipTransitionIn}
-	 */
-	export let chipTransitionIn: ChipTransitionIn = scale as ChipTransitionIn;
-	/**
-	 * Transition params provided to `ChipTransitionIn`.
-	 * @type {TransitionParams}
-	 */
-	export let chipTransitionInParams: TransitionParams<ChipTransitionIn> = { duration: 150, opacity: 0 };
-	/**
-	 * Provide the transition used in chip on exit.
-	 * @type {ChipTransitionOut}
-	 */
-	export let chipTransitionOut: ChipTransitionOut = scale as ChipTransitionOut;
-	/**
-	 * Transition params provided to `ChipTransitionOut`.
-	 * @type {TransitionParams}
-	 */
-	export let chipTransitionOutParams: TransitionParams<ChipTransitionOut> = { duration: 150, opacity: 0 };
+
+	interface Props {
+		class?: string;
+		oninvalid?: ((event: InputChipEvent['invalid']) => void) | undefined;
+		onadd?: ((event: InputChipEvent['add']) => void) | undefined;
+		onremove?: ((event: InputChipEvent['remove']) => void) | undefined;
+		oninvalidManually?: ((event: InputChipEvent['invalidManually']) => void) | undefined;
+		onaddManually?: ((event: InputChipEvent['addManually']) => void) | undefined;
+		onremoveManually?: ((event: InputChipEvent['removeManually']) => void) | undefined;
+		oninput?: ((event: Event) => void) | undefined;
+		onfocus?: ((event: FocusEvent) => void) | undefined;
+		onblur?: ((event: FocusEvent) => void) | undefined;
+		onclick?: ((event: MouseEvent) => void) | undefined;
+		onkeypress?: ((event: KeyboardEvent) => void) | undefined;
+		onkeydown?: ((event: KeyboardEvent) => void) | undefined;
+		onkeyup?: ((event: KeyboardEvent) => void) | undefined;
+		/** Bind the input value. */
+		input?: string;
+		/** Set a unique select input name. */
+		name: string;
+		/** An array of values. */
+		value?: any[];
+		/** Provide a whitelist of accepted values. */
+		whitelist?: string[];
+		/** Maximum number of chips. Set -1 to disable. */
+		max?: any;
+		/** Set the minimum character length. */
+		minlength?: any;
+		/** Set the maximum character length. */
+		maxlength?: any;
+		/** When enabled, allows for uppercase values. */
+		allowUpperCase?: boolean;
+		/** When enabled, allows for duplicate values. */
+		allowDuplicates?: boolean;
+		/** Provide a custom validator function. */
+		validation?: (...args: any[]) => boolean;
+		/** The duration of the flip (first, last, invert, play) animation. */
+		duration?: number;
+		/** Set the required state for this input field. */
+		required?: boolean;
+		/** Provide classes or a variant to style the chips. */
+		chips?: CssClasses;
+		/** Provide classes used to indicate invalid state. */
+		invalid?: CssClasses;
+		/** Provide classes to set padding styles. */
+		padding?: CssClasses;
+		/** Provide classes to set border radius styles. */
+		rounded?: CssClasses;
+		/** Provide arbitrary classes to style the chip wrapper region. */
+		regionChipWrapper?: CssClasses;
+		/** Provide arbitrary classes to style the chip list region. */
+		regionChipList?: CssClasses;
+		/** Provide arbitrary classes to style the input field region. */
+		regionInput?: CssClasses;
+		/** Provide the ARIA label for the select input. */
+		label?: string;
+		/** Enable/Disable transitions */
+		transitions?: boolean;
+		/** Provide the transition used in list on entry. */
+		listTransitionIn?: ListTransitionIn;
+		/** Transition params provided to `ListTransitionIn`. */
+		listTransitionInParams?: TransitionParams<ListTransitionIn>;
+		/** Provide the transition used in list on exit. */
+		listTransitionOut?: ListTransitionOut;
+		/** Transition params provided to `ListTransitionOut`. */
+		listTransitionOutParams?: TransitionParams<ListTransitionOut>;
+		/** Provide the transition used in chip on entry. */
+		chipTransitionIn?: ChipTransitionIn;
+		/** Transition params provided to `ChipTransitionIn`. */
+		chipTransitionInParams?: TransitionParams<ChipTransitionIn>;
+		/** Provide the transition used in chip on exit. */
+		chipTransitionOut?: ChipTransitionOut;
+		/** Transition params provided to `ChipTransitionOut`. */
+		chipTransitionOutParams?: TransitionParams<ChipTransitionOut>;
+		[key: string]: any;
+	}
+
+	let {
+		class: className = '',
+		oninvalid = undefined,
+		onadd = undefined,
+		onremove = undefined,
+		oninvalidManually = undefined,
+		onaddManually = undefined,
+		onremoveManually = undefined,
+		oninput = undefined,
+		onfocus = undefined,
+		onblur = undefined,
+		onclick = undefined,
+		onkeypress = undefined,
+		onkeydown = undefined,
+		onkeyup = undefined,
+		input = $bindable(''),
+		name,
+		value = $bindable([]),
+		whitelist = [],
+		max = -1,
+		minlength = -1,
+		maxlength = -1,
+		allowUpperCase = false,
+		allowDuplicates = false,
+		validation = () => true,
+		duration = 150,
+		required = false,
+		chips = 'variant-filled',
+		invalid = 'input-error',
+		padding = 'p-2',
+		rounded = 'rounded-container-token',
+		regionChipWrapper = '',
+		regionChipList = '',
+		regionInput = '',
+		label = 'Chips select',
+		transitions = !$prefersReducedMotionStore,
+		listTransitionIn = fly as ListTransitionIn,
+		listTransitionInParams = { duration: 150, opacity: 0, y: -20 },
+		listTransitionOut = fly as ListTransitionOut,
+		listTransitionOutParams = { duration: 150, opacity: 0, y: -20 },
+		chipTransitionIn = scale as ChipTransitionIn,
+		chipTransitionInParams = { duration: 150, opacity: 0 },
+		chipTransitionOut = scale as ChipTransitionOut,
+		chipTransitionOutParams = { duration: 150, opacity: 0 },
+		...rest
+	}: Props = $props();
 
 	// Classes
 	const cBase = 'textarea cursor-pointer';
@@ -147,20 +166,17 @@
 	const cInputField = 'unstyled bg-transparent border-0 !ring-0 p-0 w-full';
 
 	// Local
-	let inputValid = true;
-	let chipValues: Array<{ val: (typeof value)[0]; id: number }> =
-		value?.map((val) => {
-			return { val: val, id: Math.random() };
-		}) || [];
+	let inputValid: boolean = $state(true);
+	let chipValues: Array<{ val: (typeof value)[0]; id: number }> = $state([]);
 
 	// Reset Form
 	function resetFormHandler() {
 		value = [];
 	}
-	let selectElement: HTMLSelectElement;
+	let selectElement = $state<HTMLSelectElement>();
 	onMount(() => {
 		// Verify external form is present
-		if (!selectElement.form) return;
+		if (!selectElement?.form) return;
 
 		const externalForm = selectElement.form as HTMLFormElement;
 
@@ -229,21 +245,21 @@
 		// When the onInvalid hook is present
 		if (inputValid === false) {
 			/** @event {{ event: Event, input: any  }} invalid - Fires when the input value is invalid. */
-			dispatch('invalid', { event, input });
+			oninvalid?.({ event, input });
 			return;
 		}
 		addChipCommon(input);
 		/** @event {{ event: Event, chipIndex: number, chipValue: string }} add - Fires when a chip is added. */
-		dispatch('add', { event, chipIndex: value.length - 1, chipValue: input });
+		onadd?.({ event, chipIndex: value.length - 1, chipValue: input });
 		// Clear input value
 		input = '';
 	}
 
 	function removeChipInternally(event: SvelteEvent<MouseEvent, HTMLButtonElement>, chipIndex: number, chipValue: string): void {
-		if ($$restProps.disabled) return;
+		if (rest.disabled) return;
 		removeChipCommon(chipValue);
 		/** @event {{ event: Event, chipIndex: number, chipValue: string }} remove - Fires when a chip is removed. */
-		dispatch('remove', { event, chipIndex, chipValue });
+		onremove?.({ event, chipIndex, chipValue });
 	}
 
 	// Export functions
@@ -253,42 +269,42 @@
 		// When the onInvalid hook is present
 		if (inputValid === false) {
 			/** @event {{ input: string  }} invalidManually - Fires when the manually added value is invalid. */
-			dispatch('invalidManually', { input: chip });
+			oninvalidManually?.({ input: chip });
 			return;
 		}
 		addChipCommon(chip);
 		/** @event {{ chipIndex: number, chipValue: string }} addManually - Fires when a chip is added manually. */
-		dispatch('addManually', { chipIndex: value.length - 1, chipValue: chip });
+		onaddManually?.({ chipIndex: value.length - 1, chipValue: chip });
 	}
 
 	export function removeChip(chip: string) {
-		if ($$restProps.disabled) return;
+		if (rest.disabled) return;
 		removeChipCommon(chip);
 		/** @event {{ chipValue: string }} removeManually - Fires when a chip is removed manually. */
-		dispatch('removeManually', { chipValue: chip });
+		onremoveManually?.({ chipValue: chip });
 	}
 
 	// Pruned RestProps
 	function prunedRestProps() {
-		delete $$restProps.class;
-		return $$restProps;
+		return rest;
 	}
 
 	// State
-	$: classesInvalid = inputValid === false ? invalid : '';
+	let classesInvalid = $derived(!inputValid ? invalid : '');
 	// Reactive
-	$: classesBase = `${cBase} ${padding} ${rounded} ${$$props.class ?? ''} ${classesInvalid}`;
-	$: classesChipWrapper = `${cChipWrapper} ${regionChipWrapper}`;
-	$: classesChipList = `${cChipList} ${regionChipList}`;
-	$: classesInput = `${cInputField} ${regionInput}`;
-	$: chipValues =
-		value?.map((val, i) => {
-			if (chipValues[i]?.val === val) return chipValues[i];
-			return { id: Math.random(), val: val };
-		}) || [];
+	let classesBase = $derived(`${cBase} ${padding} ${rounded} ${className ?? ''} ${classesInvalid}`);
+	let classesChipWrapper = $derived(`${cChipWrapper} ${regionChipWrapper}`);
+	let classesChipList = $derived(`${cChipList} ${regionChipList}`);
+	let classesInput = $derived(`${cInputField} ${regionInput}`);
+	$effect.pre(() => {
+		const next = value?.slice() || [];
+		untrack(() => {
+			chipValues = next.map((val, i) => (chipValues[i]?.val === val ? chipValues[i] : { id: Math.random(), val }));
+		});
+	});
 </script>
 
-<div class="input-chip {classesBase}" class:opacity-50={$$restProps.disabled}>
+<div class="input-chip {classesBase}" class:opacity-50={rest.disabled}>
 	<!-- NOTE: Don't use `hidden` as it prevents `required` from operating -->
 	<div class="h-0 overflow-hidden">
 		<select bind:this={selectElement} bind:value {name} multiple {required} aria-label={label} tabindex="-1">
@@ -302,13 +318,13 @@
 		<input
 			type="text"
 			bind:value={input}
-			placeholder={$$restProps.placeholder ?? 'Enter values...'}
+			placeholder={rest.placeholder ?? 'Enter values...'}
 			class="input-chip-field {classesInput}"
-			on:keydown={onKeyHandler}
-			on:input
-			on:focus
-			on:blur
-			disabled={$$restProps.disabled}
+			onkeydown={onKeyHandler}
+			oninput={(event) => oninput?.(event)}
+			onfocus={(event) => onfocus?.(event)}
+			onblur={(event) => onblur?.(event)}
+			disabled={rest.disabled}
 			{...prunedRestProps()}
 		/>
 		<!-- Chip List -->
@@ -324,11 +340,13 @@
 						<button
 							type="button"
 							class="chip {chips}"
-							on:click={(e) => removeChipInternally(e, i, val)}
-							on:click
-							on:keypress
-							on:keydown
-							on:keyup
+							onclick={(event) => {
+								removeChipInternally(event, i, val);
+								onclick?.(event);
+							}}
+							onkeypress={(event) => onkeypress?.(event)}
+							onkeydown={(event) => onkeydown?.(event)}
+							onkeyup={(event) => onkeyup?.(event)}
 							in:dynamicTransition|local={{ transition: chipTransitionIn, params: chipTransitionInParams, enabled: transitions }}
 							out:dynamicTransition|local={{ transition: chipTransitionOut, params: chipTransitionOutParams, enabled: transitions }}
 						>

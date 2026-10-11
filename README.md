@@ -1,39 +1,107 @@
-[![Skeleton](https://user-images.githubusercontent.com/1509726/199282306-7454adcb-b765-4618-8438-67655a7dee47.png)](https://www.skeleton.dev/)
+# Maintained Skeleton v2
 
-[![npm version](https://img.shields.io/npm/v/@skeletonlabs/skeleton?logo=npm&color=cb3837&label=core)](https://www.npmjs.com/package/@skeletonlabs/skeleton)
-[![npm version](https://img.shields.io/npm/v/@skeletonlabs/tw-plugin?logo=npm&color=cb3837&label=tw-plugin)](https://www.npmjs.com/package/@skeletonlabs/tw-plugin)
-[![Chat](https://img.shields.io/discord/1003691521280856084?label=chat&logo=discord&color=7289da)](https://discord.gg/EXqV7W8MtY)
-[![license](https://img.shields.io/badge/license-MIT-%23bada55)](https://github.com/skeletonlabs/skeleton/blob/master/LICENSE)
+This independent fork preserves Skeleton v2's complete UI library, themes, tokens, and design while using native Svelte 5 and Tailwind CSS 4.
 
-# 💀 Skeleton
+It starts at the official [`@skeletonlabs/skeleton@2.11.0`](https://github.com/skeletonlabs/skeleton/tree/04cf8e035e3d7a10f47e07b9d3d4afad61fbabcc) release, commit `04cf8e035e3d7a10f47e07b9d3d4afad61fbabcc`, including `@skeletonlabs/tw-plugin@0.4.1`. Active work lives on [`modernize-v2`](https://github.com/leon8ix/skeleton-v2/tree/modernize-v2).
 
-Skeleton is an open source UI toolkit built with Svelte + Tailwind that allows you to create reactive web interfaces using [Svelte](https://svelte.dev/) + [Tailwind CSS](https://tailwindcss.com/).
+## Scope
 
-## 🔗 Useful Links
+| Directory           | Maintained package                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------ |
+| `packages/skeleton` | `@leon8ix/skeleton-v2`: all components, actions, stores, utilities, and transitions        |
+| `packages/plugin`   | `@leon8ix/skeleton-v2-tailwind`: themes, design tokens, v2 CSS, and Tailwind 4 integration |
 
-- [Documentation](https://skeleton.dev/)
-- [Contribution Guide](https://skeleton.dev/docs/contributing)
-<!-- - [Project Roadmap](https://github.com/skeletonlabs/skeleton/wiki/%F0%9F%9B%A3%EF%B8%8F-The-Skeleton-Roadmap) -->
+The original documentation website, app-creation CLI, and obsolete development/release tooling are preserved in `archive/`. They are historical reference material, excluded from workspaces, installation, builds, formatting, tests, and dependency audits. Archived documentation describes the original Svelte API; apply the migration notes below.
 
-## 👋 Community
+## Development
 
-- [Join the Discord](https://discord.gg/EXqV7W8MtY)
-- [Follow on Twitter](https://twitter.com/SkeletonUI)
+Use Node.js 24 and npm 12. Dependencies are locked in the root `package-lock.json`.
 
-## 👍 Sponsor the Project
+```sh
+npm ci
+npm run build
+npm run check
+npm test
+npm run format:check
+npm audit
+npm pack --workspaces
+```
 
-- [Ko-Fi](https://ko-fi.com/skeletonlabs)
-- [GitHub Sponsors](https://github.com/sponsors/skeletonlabs)
-- [Patreon](https://patreon.com/user?u=83786276)
+Run `npm run format` after edits. Build before testing the plugin because its generated CSS module is a build artifact. CI validates the maintained packages without publishing them.
 
-## 🐞 Report an Issue
+TypeScript remains at 6.0.3 because current Svelte packaging/checking tools do not support TypeScript 7 in their peer ranges. Node types track Node 24. Other active direct dependencies were updated to their current stable versions on 2026-10-11. Archived packages retain historical dependencies.
 
-- [File a Ticket](https://github.com/skeletonlabs/skeleton/issues/new/choose)
+Package versions retain the upstream baseline numbers during this feature-branch migration. No npm release has been published. Fontanum installs built archives from its checked-in `vendor/` directory, with integrity recorded in its lockfile. Deployment does not depend on a sibling checkout. Rebuild and replace both archives together when changing this fork.
 
-## 🛠️ Contributions
+## Tailwind 4 setup
 
-We have provided a detailed [contribution guide](https://www.skeleton.dev/docs/contributing) to help you get started. [Find an open issue](https://github.com/skeletonlabs/skeleton/issues), discuss the requirements with other contributors, then send a PR!
+Keep the v2 theme configuration in `tailwind.config.cjs`:
 
-## Maintainers
+```js
+const { skeleton } = require('@leon8ix/skeleton-v2-tailwind');
+module.exports = {
+	darkMode: 'class',
+	plugins: [skeleton({ themes: { preset: ['skeleton'] } })]
+};
+```
 
-Skeleton was created by [Chris Simmons](https://github.com/endigo9740) (@endigo9740) and is currently maintained by [Skeleton Labs](https://www.skeletonlabs.co/) and the open source community.
+Use a `.css` entry point; Tailwind's Vite transform does not process `.pcss` entry points.
+
+```css
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme' layer(theme);
+@import '@leon8ix/skeleton-v2-tailwind/src/styles/preflight.css' layer(base);
+@import 'tailwindcss/utilities' layer(utilities);
+@config '../tailwind.config.cjs';
+@source '../node_modules/@leon8ix/skeleton-v2/dist';
+```
+
+Adjust relative paths for the application. Put application-wide resets in a layer before `base` so they do not override layered utilities.
+
+```ts
+import tailwindcss from '@tailwindcss/vite';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { skeletonV2Spacing } from '@leon8ix/skeleton-v2-tailwind';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+	plugins: [tailwindcss(), sveltekit()],
+	css: { postcss: { plugins: [skeletonV2Spacing()] } }
+});
+```
+
+`skeletonV2Spacing()` restores the original `space-x-*` and `space-y-*` sibling selectors and physical margins after Tailwind compilation. This preserves hidden-child handling, reversed spacing, and precedence against existing margin utilities. Tailwind 4 changed these rules, which otherwise changes v2 layouts.
+
+The plugin retains v2's default colors, shadows, radii, typography, and reset. Base and component declarations are frozen from the official plugin output; tests compare every declaration with the upstream baseline. There is no Tailwind 3 runtime dependency. Tailwind 4's [browser requirements](https://tailwindcss.com/docs/upgrade-guide) apply.
+
+## Svelte 5 API migration
+
+Import from `@leon8ix/skeleton-v2`. Components use runes, callback props, and snippets without a legacy component wrapper.
+
+- Replace component event directives with callbacks: `on:selection={(event) => choose(event.detail)}` becomes `onselection={choose}`. Component callbacks receive the former event detail directly; forwarded DOM callbacks still receive DOM events
+- Replace named slots with snippets of the same name; default content becomes `children`
+- `TabGroup` uses `panelContent` for its panel snippet, preserving the existing `panel` string prop
+- `TreeViewItem` uses `content` for default content and `childContent` for children, preserving the existing `children` array of relational references
+- Tree references expose selection state through `ref.item` and `ref.onParentChange()`; component `$on` listeners are replaced with callbacks and reactive relationships
+- Bind writable state such as `open`, `checked`, `group`, and input values. Read-only inputs, such as `Autocomplete.input`, are passed as ordinary props
+- The clipboard action uses `oncopyComplete` for its DOM completion event
+
+```svelte
+<script lang="ts">
+	import { Accordion, AccordionItem } from '@leon8ix/skeleton-v2';
+	let open = $state(false);
+</script>
+
+<Accordion>
+	<AccordionItem bind:open>
+		{#snippet summary()}Options{/snippet}
+		{#snippet content()}The original v2 panel styling{/snippet}
+	</AccordionItem>
+</Accordion>
+```
+
+## Validation and license
+
+Tests cover the upstream component suite, callback payloads, keyboard tabs and switches, accordion collapse, checkbox groups, chip editing, modal prompts, relational tree selection, reactive radial progress, and Tailwind compilation. The original skipped LightSwitch test remains skipped. Fontanum was also checked in the browser at desktop and mobile widths; this is representative coverage, not an exhaustive guarantee for every component combination.
+
+Skeleton's original MIT license and attribution are retained. The frozen Tailwind reset/defaults are covered by the included `LICENSE-TAILWIND` in the styling package.

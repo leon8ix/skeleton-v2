@@ -1,33 +1,24 @@
 {
-	"name": "skeleton",
+	"name": "skeleton-v2",
 	"version": "1.0.0",
-	"description": "monorepo for @skeletonlabs/skeleton",
+	"description": "Maintained Skeleton v2 UI library and styling plugin",
 	"private": true,
 	"scripts": {
-		"test": "pnpm -F @skeletonlabs/skeleton test",
-		"preinstall": "npx only-allow pnpm",
-		"getall": "node scripts/checkout.cjs && pnpm i",
-		"postinstall": "pnpm -r sync",
-		"dev": "pnpm --no-sort --filter=skeleton.dev dev",
-		"csa": "node ./packages/create-skeleton-app/src/index.js --types=typescript --prettier --eslint --playwright=false --vitest=false --codeblocks --popups --typography --forms -t=skeleton --skeletontemplate=welcome -p=sites --monorepo --inspector",
-		"csl": "node ./packages/create-skeleton-app/src/index.js --types=typescript --library --prettier --eslint --playwright --vitest --codeblocks --popups --typography --forms -t=skeleton --skeletontemplate=bare -p=packages --monorepo --inspector",
-		"templategen": "node ./scripts/template-gen.js",
-		"format": "pnpm --parallel format",
-		"ci:publish": "changeset publish",
-		"ci:package": "pnpm -r package",
-		"ci:release": "pnpm ci:package && pnpm ci:publish",
-		"ci:lint": "pnpm -r lint",
-		"ci:check": "pnpm -r check",
-		"cs": "changeset"
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"check": "npm run check --workspaces",
+		"test": "npm run test --workspaces",
+		"build": "npm run build --workspaces",
+		"pack": "npm run build && npm pack --workspaces"
 	},
 	"license": "MIT",
 	"homepage": "https://skeleton.dev/",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/skeletonlabs/skeleton.git"
+		"url": "https://github.com/leon8ix/skeleton-v2.git"
 	},
 	"bugs": {
-		"url": "https://github.com/skeletonlabs/skeleton/issues"
+		"url": "https://github.com/leon8ix/skeleton-v2/issues"
 	},
 	"keywords": [
 		"cli",
@@ -44,14 +35,19 @@
 		"sveltekit"
 	],
 	"devDependencies": {
-		"@changesets/cli": "^2.26.1",
-		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
-		"cspell": "^6.31.1",
-		"shelljs": "^0.8.5"
+		"prettier": "^3.9.10",
+		"prettier-plugin-svelte": "^4.1.1",
+		"@types/jsdom": "^30.0.0",
+		"typescript": "^6.0.3",
+		"@types/node": "^24.19.2"
 	},
 	"engines": {
-		"pnpm": ">=9.2.0"
+		"node": ">=24"
 	},
-	"packageManager": "pnpm@9.2.0",
-	"type": "module"
+	"packageManager": "npm@12.0.2",
+	"type": "module",
+	"workspaces": [
+		"packages/skeleton",
+		"packages/plugin"
+	]
 }

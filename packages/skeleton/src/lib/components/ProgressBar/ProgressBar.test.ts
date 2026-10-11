@@ -12,7 +12,7 @@ describe('ProgressBar.svelte', () => {
 	it('Renders with all props', () => {
 		const { getByTestId } = render(ProgressBar, {
 			props: {
-				label: 'Test',
+				labelledby: 'Test',
 				min: 10,
 				value: 50,
 				max: 100,

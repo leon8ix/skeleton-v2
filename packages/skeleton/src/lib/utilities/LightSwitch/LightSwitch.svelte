@@ -5,26 +5,50 @@
 	// Types
 	import type { CssClasses, SvelteEvent } from '../../index.js';
 
-	// Props
-	/** Customize the `title` attribute for the component.  */
-	export let title = 'Toggle light or dark mode.';
 	// Props (styles)
-	/** Provide classes to set the light background color. */
-	export let bgLight: CssClasses = 'bg-surface-50';
-	/** Provide classes to set the dark background color. */
-	export let bgDark: CssClasses = 'bg-surface-900';
-	/** Provide classes to set the light SVG fill color. */
-	export let fillLight: CssClasses = 'fill-surface-50';
-	/** Provide classes to set the dark SVG fill color. */
-	export let fillDark: CssClasses = 'fill-surface-900';
-	/** Provide classes to set width styles. */
-	export let width: CssClasses = 'w-12';
-	/** Provide classes to set height styles. Should be half of width. */
-	export let height: CssClasses = 'h-6';
-	/** Provide classes to set ring styles. */
-	export let ring: CssClasses = 'ring-[1px] ring-surface-500/30';
-	/** Provide classes to set border radius styles. */
-	export let rounded: CssClasses = 'rounded-token';
+
+	interface Props {
+		class?: string;
+		onclick?: ((event: MouseEvent) => void) | undefined;
+		onkeydown?: ((event: KeyboardEvent) => void) | undefined;
+		onkeyup?: ((event: KeyboardEvent) => void) | undefined;
+		onkeypress?: ((event: KeyboardEvent) => void) | undefined;
+		/** Customize the `title` attribute for the component. */
+		title?: string;
+		/** Provide classes to set the light background color. */
+		bgLight?: CssClasses;
+		/** Provide classes to set the dark background color. */
+		bgDark?: CssClasses;
+		/** Provide classes to set the light SVG fill color. */
+		fillLight?: CssClasses;
+		/** Provide classes to set the dark SVG fill color. */
+		fillDark?: CssClasses;
+		/** Provide classes to set width styles. */
+		width?: CssClasses;
+		/** Provide classes to set height styles. Should be half of width. */
+		height?: CssClasses;
+		/** Provide classes to set ring styles. */
+		ring?: CssClasses;
+		/** Provide classes to set border radius styles. */
+		rounded?: CssClasses;
+	}
+
+	let {
+		class: className = '',
+		onclick = undefined,
+		onkeydown = undefined,
+		onkeyup = undefined,
+		onkeypress = undefined,
+		title = 'Toggle light or dark mode.',
+		bgLight = 'bg-surface-50',
+		bgDark = 'bg-surface-900',
+		fillLight = 'fill-surface-50',
+		fillDark = 'fill-surface-900',
+		width = 'w-12',
+		height = 'h-6',
+		ring = 'ring-[1px] ring-surface-500/30',
+		rounded = 'rounded-token'
+	}: Props = $props();
 
 	// Classes
 	const cTransition = `transition-all duration-[200ms]`;
@@ -62,14 +86,14 @@
 	});
 
 	// State
-	$: trackBg = $modeCurrent === true ? bgLight : bgDark;
-	$: thumbBg = $modeCurrent === true ? bgDark : bgLight;
-	$: thumbPosition = $modeCurrent === true ? 'translate-x-[100%]' : '';
-	$: iconFill = $modeCurrent === true ? fillLight : fillDark;
+	let trackBg = $derived($modeCurrent === true ? bgLight : bgDark);
+	let thumbBg = $derived($modeCurrent === true ? bgDark : bgLight);
+	let thumbPosition = $derived($modeCurrent === true ? 'translate-x-[100%]' : '');
+	let iconFill = $derived($modeCurrent === true ? fillLight : fillDark);
 	// Reactive
-	$: classesTrack = `${cTrack} ${cTransition} ${width} ${height} ${ring} ${rounded} ${trackBg} ${$$props.class ?? ''}`;
-	$: classesThumb = `${cThumb} ${cTransition} ${height} ${rounded} ${thumbBg} ${thumbPosition}`;
-	$: classesIcon = `${cIcon} ${iconFill}`;
+	let classesTrack = $derived(`${cTrack} ${cTransition} ${width} ${height} ${ring} ${rounded} ${trackBg} ${className ?? ''}`);
+	let classesThumb = $derived(`${cThumb} ${cTransition} ${height} ${rounded} ${thumbBg} ${thumbPosition}`);
+	let classesIcon = $derived(`${cIcon} ${iconFill}`);
 </script>
 
 <svelte:head>
@@ -79,12 +103,16 @@
 
 <div
 	class="lightswitch-track {classesTrack}"
-	on:click={onToggleHandler}
-	on:click
-	on:keydown={onKeyDown}
-	on:keydown
-	on:keyup
-	on:keypress
+	onclick={(event) => {
+		onToggleHandler();
+		onclick?.(event);
+	}}
+	onkeydown={(event) => {
+		onKeyDown(event);
+		onkeydown?.(event);
+	}}
+	onkeyup={(event) => onkeyup?.(event)}
+	onkeypress={(event) => onkeypress?.(event)}
 	role="switch"
 	aria-label="Light Switch"
 	aria-checked={$modeCurrent}

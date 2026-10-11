@@ -8,7 +8,7 @@ import seafoam from './seafoam.js';
 import skeleton from './skeleton.js';
 import vintage from './vintage.js';
 import wintry from './wintry.js';
-import type { CSSRuleObject } from 'tailwindcss/types/config.js';
+import type { CssInJs as CSSRuleObject } from 'postcss-js';
 
 export const themes = { crimson, 'gold-nouveau': goldNouveau, hamlindigo, modern, rocket, sahara, seafoam, skeleton, vintage, wintry };
 

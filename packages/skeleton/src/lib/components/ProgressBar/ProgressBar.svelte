@@ -2,48 +2,59 @@
 	// Types
 	import type { CssClasses } from '../../index.js';
 
-	// Props
-	/**
-	 * Specifies the amount completed. Indeterminate when `undefined`.
-	 * @type {number | undefined}
-	 */
-	export let value: number | undefined = undefined;
-	/** Minimum amount the bar represents. */
-	export let min = 0;
-	/** Maximum amount the bar represents. */
-	export let max = 100;
-	/** Provide classes to set track height. */
-	export let height: CssClasses = 'h-2';
-	/** Provide classes to set rounded styles. */
-	export let rounded: CssClasses = 'rounded-token';
-	/** Provide classes to set the meter transition styles. */
-	export let transition: CssClasses = 'transition-[width]';
-	/** Provide classes to replace the default animation styles. */
-	export let animIndeterminate: CssClasses = 'anim-indeterminate';
-
-	// Props (elements)
-	/** Sets the base classes of the meter element. */
-	export let meter: CssClasses = 'bg-surface-900-50-token';
-	/** Sets the base classes of the track element. */
-	export let track: CssClasses = 'bg-surface-200-700-token';
-
 	// Props A11y
-	/** Provide the ARIA labelledby value. */
-	export let labelledby = '';
+
+	interface Props {
+		class?: string;
+		/** Specifies the amount completed. Indeterminate when `undefined`. */
+		value?: number | undefined;
+		/** Minimum amount the bar represents. */
+		min?: number;
+		/** Maximum amount the bar represents. */
+		max?: number;
+		/** Provide classes to set track height. */
+		height?: CssClasses;
+		/** Provide classes to set rounded styles. */
+		rounded?: CssClasses;
+		/** Provide classes to set the meter transition styles. */
+		transition?: CssClasses;
+		/** Provide classes to replace the default animation styles. */
+		animIndeterminate?: CssClasses;
+		/** Sets the base classes of the meter element. */
+		meter?: CssClasses;
+		/** Sets the base classes of the track element. */
+		track?: CssClasses;
+		/** Provide the ARIA labelledby value. */
+		labelledby?: string;
+	}
+
+	let {
+		class: className = '',
+		value = undefined,
+		min = 0,
+		max = 100,
+		height = 'h-2',
+		rounded = 'rounded-token',
+		transition = 'transition-[width]',
+		animIndeterminate = 'anim-indeterminate',
+		meter = 'bg-surface-900-50-token',
+		track = 'bg-surface-200-700-token',
+		labelledby = ''
+	}: Props = $props();
 
 	// Base Classes
 	const cTrack = 'w-full overflow-hidden';
 	const cMeter = 'h-full';
 
 	// Fill Percent
-	$: fillPercent = value ? (100 * (value - min)) / (max - min) : 0;
+	let fillPercent = $derived(value ? (100 * (value - min)) / (max - min) : 0);
 
 	// Indeterminate State
-	$: indeterminate = value === undefined || value < 0;
-	$: classesIndeterminate = indeterminate ? animIndeterminate : '';
+	let indeterminate = $derived(value === undefined || value < 0);
+	let classesIndeterminate = $derived(indeterminate ? animIndeterminate : '');
 	// Reactive Classes
-	$: classesTrack = `${cTrack} ${track} ${height} ${rounded} ${$$props.class ?? ''}`;
-	$: classesMeter = `${cMeter} ${meter} ${rounded} ${classesIndeterminate} ${transition}`;
+	let classesTrack = $derived(`${cTrack} ${track} ${height} ${rounded} ${className ?? ''}`);
+	let classesMeter = $derived(`${cMeter} ${meter} ${rounded} ${classesIndeterminate} ${transition}`);
 </script>
 
 <!-- Track -->

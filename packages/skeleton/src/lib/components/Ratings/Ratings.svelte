@@ -1,47 +1,60 @@
 <script lang="ts">
 	// Slots:
-	/**
-	 * @slot {{}} empty - Provide an empty rating icon.
-	 * @slot {{}} half - Provide a half rating icon.
-	 * @slot {{}} full - Provide a full rating icon.
-	 */
-
-	import { createEventDispatcher } from 'svelte';
+	/** @slot {{}} empty - Provide an empty rating icon. @slot {{}} half - Provide a half rating icon. @slot {{}} full - Provide a full rating icon. */
 
 	// Types
 	import type { CssClasses } from '../../index.js';
 
-	// Props
-	/** Current rating value. */
-	export let value = 0;
-	/** Maximum rating value. */
-	export let max = 5;
-	/** Enables interactive mode for each rating icon. */
-	export let interactive = false;
-
-	// Props (styles)
-	/** Provide classes to set the text color. */
-	export let text: CssClasses = 'text-token';
-	/** Provide classes to set the SVG fill color. */
-	export let fill: CssClasses = 'fill-token';
-	/** Provide classes to set the flexbox justification. */
-	export let justify: CssClasses = 'justify-center';
-	/** Provide classes to set the horizontal spacing style. */
-	export let spacing: CssClasses = 'space-x-2';
-
 	// Props (regions)
-	/** Provide arbitrary classes to the icon region. */
-	export let regionIcon: CssClasses = '';
+
+	interface Props {
+		class?: string;
+		onicon?: ((event: RatingsEvent['icon']) => void) | undefined;
+		/** Current rating value. */
+		value?: number;
+		/** Maximum rating value. */
+		max?: number;
+		/** Enables interactive mode for each rating icon. */
+		interactive?: boolean;
+		/** Provide classes to set the text color. */
+		text?: CssClasses;
+		/** Provide classes to set the SVG fill color. */
+		fill?: CssClasses;
+		/** Provide classes to set the flexbox justification. */
+		justify?: CssClasses;
+		/** Provide classes to set the horizontal spacing style. */
+		spacing?: CssClasses;
+		/** Provide arbitrary classes to the icon region. */
+		regionIcon?: CssClasses;
+		full?: import('svelte').Snippet;
+		half?: import('svelte').Snippet;
+		empty?: import('svelte').Snippet;
+	}
+
+	let {
+		class: className = '',
+		onicon = undefined,
+		value = 0,
+		max = 5,
+		interactive = false,
+		text = 'text-token',
+		fill = 'fill-token',
+		justify = 'justify-center',
+		spacing = 'space-x-2',
+		regionIcon = '',
+		full,
+		half,
+		empty
+	}: Props = $props();
 
 	// Event Dispatcher
 	type RatingsEvent = {
 		icon: { index: number };
 	};
-	const dispatch = createEventDispatcher<RatingsEvent>();
 
 	function iconClick(index: number): void {
 		/** @event {{ index: number  }} icon - Fires when an icons is clicked */
-		dispatch('icon', {
+		onicon?.({
 			index: index + 1
 		});
 	}
@@ -58,30 +71,30 @@
 	const cBase = 'w-full flex';
 
 	// Reactive
-	$: classesBase = `${cBase} ${text} ${fill} ${justify} ${spacing} ${$$props.class ?? ''}`;
+	let classesBase = $derived(`${cBase} ${text} ${fill} ${justify} ${spacing} ${className ?? ''}`);
 </script>
 
 <div class="ratings {classesBase}" data-testid="rating-bar">
 	<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
 	{#each { length: max } as _, i}
 		{#if interactive}
-			<button class="rating-icon {regionIcon}" type="button" on:click={() => iconClick(i)}>
+			<button class="rating-icon {regionIcon}" type="button" onclick={() => iconClick(i)}>
 				{#if isFull(value, i)}
-					<slot name="full" />
+					{@render full?.()}
 				{:else if isHalf(value, i)}
-					<slot name="half" />
+					{@render half?.()}
 				{:else}
-					<slot name="empty" />
+					{@render empty?.()}
 				{/if}
 			</button>
 		{:else}
 			<span class="rating-icon {regionIcon}">
 				{#if isFull(value, i)}
-					<slot name="full" />
+					{@render full?.()}
 				{:else if isHalf(value, i)}
-					<slot name="half" />
+					{@render half?.()}
 				{:else}
-					<slot name="empty" />
+					{@render empty?.()}
 				{/if}
 			</span>
 		{/if}

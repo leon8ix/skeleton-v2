@@ -52,24 +52,22 @@ describe('Autocomplete.svelte', () => {
 		});
 	});
 
-	it('Shows a message when no options match the search term', () => {
+	it('Shows a message when no options match the search term', async () => {
 		const { getByText, rerender } = render(Autocomplete, { props: { options, input: 'nonexistent' } });
 		expect(getByText('No Results Found.')).toBeTruthy();
 
 		// ensures custom message is set
-		rerender({ options, input: 'nonexistent', emptyState: 'custom message' });
+		await rerender({ options, input: 'nonexistent', emptyState: 'custom message' });
 		expect(getByText('custom message')).toBeTruthy();
 	});
 
 	it('Fires the selection event when an option is selected', () => {
 		let selectedOption: AutocompleteOption | undefined;
-		const selectionHandler = vi.fn((e: CustomEvent<AutocompleteOption>) => (selectedOption = e.detail));
+		const selectionHandler = vi.fn((option: AutocompleteOption) => (selectedOption = option));
 
-		const { getByText, component } = render(Autocomplete, {
-			props: { options, input: 'ne' }
+		const { getByText } = render(Autocomplete, {
+			props: { options, input: 'ne', onselection: selectionHandler }
 		});
-
-		component.$on('selection', selectionHandler);
 
 		getByText('Neapolitan').click();
 

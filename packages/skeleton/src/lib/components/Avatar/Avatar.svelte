@@ -3,51 +3,73 @@
 	import type { CssClasses } from '../../index.js';
 	import type { Action } from 'svelte/action';
 
-	// Props (initials)
-	/** Initials only - Provide up to two text characters. */
-	export let initials = '';
-	/** Initials only - Provide classes to set the SVG text fill color. */
-	export let fill: CssClasses = 'fill-token';
-	/** Initials only - Set the base font size for the scalable SVG text. */
-	export let fontSize = 150;
-
-	// Props (actions)
-	/** Provide the avatar image element source. */
-	export let src = '';
-	/** Provide the fallback image element source. */
-	export let fallback = '';
-	/**
-	 * Image only. Provide a Svelte action reference, such as `filter`.
-	 */
-	export let action: Action<HTMLElement, string> = () => {};
-	/** Image only. Provide Svelte action params, such as Apollo. */
-	export let actionParams = '';
-
 	// Props (styles)
-	/** Provide classes to set background styles. */
-	export let background: CssClasses = 'bg-surface-400-500-token';
-	/** Provide classes to set avatar width. */
-	export let width: CssClasses = 'w-16';
-	/** Provide classes to set border styles. */
-	export let border: CssClasses = '';
-	/** Provide classes to set rounded style. */
-	export let rounded: CssClasses = 'rounded-full';
-	/** Provide classes to set shadow styles. */
-	export let shadow: CssClasses = '';
-	/** Provide classes to set cursor styles. */
-	export let cursor: CssClasses = '';
+
+	interface Props {
+		class?: string;
+		style?: string;
+		alt?: string;
+		/** Initials only - Provide up to two text characters. */
+		initials?: string;
+		/** Initials only - Provide classes to set the SVG text fill color. */
+		fill?: CssClasses;
+		/** Initials only - Set the base font size for the scalable SVG text. */
+		fontSize?: number;
+		/** Provide the avatar image element source. */
+		src?: string;
+		/** Provide the fallback image element source. */
+		fallback?: string;
+		/** Image only. Provide a Svelte action reference, such as `filter`. */
+		action?: Action<HTMLElement, string>;
+		/** Image only. Provide Svelte action params, such as Apollo. */
+		actionParams?: string;
+		/** Provide classes to set background styles. */
+		background?: CssClasses;
+		/** Provide classes to set avatar width. */
+		width?: CssClasses;
+		/** Provide classes to set border styles. */
+		border?: CssClasses;
+		/** Provide classes to set rounded style. */
+		rounded?: CssClasses;
+		/** Provide classes to set shadow styles. */
+		shadow?: CssClasses;
+		/** Provide classes to set cursor styles. */
+		cursor?: CssClasses;
+		children?: import('svelte').Snippet;
+		[key: string]: any;
+	}
+
+	let {
+		class: className = '',
+		style: styleAttribute = '',
+		alt: altAttribute = '',
+		initials = '',
+		fill = 'fill-token',
+		fontSize = 150,
+		src = $bindable(''),
+		fallback = '',
+		action = () => {},
+		actionParams = '',
+		background = 'bg-surface-400-500-token',
+		width = 'w-16',
+		border = '',
+		rounded = 'rounded-full',
+		shadow = '',
+		cursor = '',
+		children,
+		...rest
+	}: Props = $props();
 
 	// Base Classes
 	let cBase = 'flex aspect-square text-surface-50 font-semibold justify-center items-center overflow-hidden isolate';
 	let cImage = 'w-full object-cover';
 
 	// Reactive Classes
-	$: classesBase = `${cBase} ${background} ${width} ${border} ${rounded} ${shadow} ${cursor} ${$$props.class ?? ''}`;
+	let classesBase = $derived(`${cBase} ${background} ${width} ${border} ${rounded} ${shadow} ${cursor} ${className ?? ''}`);
 
 	// Utility Functions
 	function prunedRestProps() {
-		delete $$restProps.class;
-		return $$restProps;
+		return rest;
 	}
 </script>
 
@@ -55,11 +77,11 @@
 	{#if src || fallback}
 		<img
 			class="avatar-image {cImage}"
-			style={$$props.style ?? ''}
+			style={styleAttribute ?? ''}
 			{src}
-			alt={$$props.alt || ''}
+			alt={altAttribute || ''}
 			use:action={actionParams}
-			on:error={() => (src = fallback)}
+			onerror={() => (src = fallback)}
 		/>
 	{:else if initials}
 		<svg class="avatar-initials w-full h-full" viewBox="0 0 512 512">
@@ -76,6 +98,6 @@
 			</text>
 		</svg>
 	{:else}
-		<slot />
+		{@render children?.()}
 	{/if}
 </figure>

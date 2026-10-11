@@ -4,6 +4,7 @@
 // Skeleton Docs: https://www.skeleton.dev/docs/get-started
 
 import plugin from 'tailwindcss/plugin.js';
+import v2Defaults from './v2-defaults.json';
 
 // Skeleton Theme Modules
 import themeColors from './colors.js';
@@ -29,7 +30,8 @@ export const coreConfig = {
 	theme: {
 		extend: {
 			// Implement Skeleton theme colors
-			colors: themeColors()
+			...v2Defaults,
+			colors: { ...v2Defaults.colors, ...themeColors() }
 		}
 	}
 };

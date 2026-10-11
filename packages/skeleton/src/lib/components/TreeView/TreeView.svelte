@@ -1,59 +1,77 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { setContext } from 'svelte';
 
 	// Types
 	import type { CssClasses } from '../../index.js';
 
-	// Props (parent)
-	/** Enable tree-view selection. */
-	export let selection = false;
-	/** Enable selection of multiple items. */
-	export let multiple = false;
-	/** Provide classes to set the tree width. */
-	export let width: CssClasses = 'w-full';
-	/** Provide classes to set the vertical spacing between items. */
-	export let spacing: CssClasses = 'space-y-1';
-
-	// Props (children)
-	/** Set open by default on load. */
-	export let open = false;
-	/** Set the tree disabled state */
-	export let disabled = false;
-	/** Provide classes to set the tree item padding styles. */
-	export let padding: CssClasses = 'py-4 px-4';
-	/** Provide classes to set the tree children indentation */
-	export let indent: CssClasses = 'ml-4';
-	/** Provide classes to set the tree item hover styles. */
-	export let hover: CssClasses = 'hover:variant-soft';
-	/** Provide classes to set the tree item rounded styles. */
-	export let rounded: CssClasses = 'rounded-container-token';
-
-	// Props (symbols)
-	/** Set the rotation of the item caret in the open state. */
-	export let caretOpen: CssClasses = 'rotate-180';
-	/** Set the rotation of the item caret in the closed state. */
-	export let caretClosed: CssClasses = '';
-	/* Set the hyphen symbol opacity for non-expandable rows. */
-	export let hyphenOpacity: CssClasses = 'opacity-10';
-
-	// Props (regions)
-	/** Provide arbitrary classes to the tree item summary region. */
-	export let regionSummary: CssClasses = '';
-	/** Provide arbitrary classes to the symbol icon region. */
-	export let regionSymbol: CssClasses = '';
-	/** Provide arbitrary classes to the children region. */
-	export let regionChildren: CssClasses = '';
-
 	// Props A11y
-	/** Provide the ARIA labelledby value. */
-	export let labelledby = '';
+
+	interface Props {
+		class?: string;
+		/** Enable tree-view selection. */
+		selection?: boolean;
+		/** Enable selection of multiple items. */
+		multiple?: boolean;
+		/** Provide classes to set the tree width. */
+		width?: CssClasses;
+		/** Provide classes to set the vertical spacing between items. */
+		spacing?: CssClasses;
+		/** Set open by default on load. */
+		open?: boolean;
+		/** Set the tree disabled state */
+		disabled?: boolean;
+		/** Provide classes to set the tree item padding styles. */
+		padding?: CssClasses;
+		/** Provide classes to set the tree children indentation */
+		indent?: CssClasses;
+		/** Provide classes to set the tree item hover styles. */
+		hover?: CssClasses;
+		/** Provide classes to set the tree item rounded styles. */
+		rounded?: CssClasses;
+		/** Set the rotation of the item caret in the open state. */
+		caretOpen?: CssClasses;
+		/** Set the rotation of the item caret in the closed state. */
+		caretClosed?: CssClasses;
+		/* Set the hyphen symbol opacity for non-expandable rows. */
+		hyphenOpacity?: CssClasses;
+		/** Provide arbitrary classes to the tree item summary region. */
+		regionSummary?: CssClasses;
+		/** Provide arbitrary classes to the symbol icon region. */
+		regionSymbol?: CssClasses;
+		/** Provide arbitrary classes to the children region. */
+		regionChildren?: CssClasses;
+		/** Provide the ARIA labelledby value. */
+		labelledby?: string;
+		children?: import('svelte').Snippet;
+	}
+
+	let {
+		class: className = '',
+		selection = false,
+		multiple = false,
+		width = 'w-full',
+		spacing = 'space-y-1',
+		open = false,
+		disabled = false,
+		padding = 'py-4 px-4',
+		indent = 'ml-4',
+		hover = 'hover:variant-soft',
+		rounded = 'rounded-container-token',
+		caretOpen = 'rotate-180',
+		caretClosed = '',
+		hyphenOpacity = 'opacity-10',
+		regionSummary = '',
+		regionSymbol = '',
+		regionChildren = '',
+		labelledby = '',
+		children
+	}: Props = $props();
 
 	// Functionality
-	/**
-	 * expands all tree view items.
-	 * @type {() => void}
-	 */
+	/** expands all tree view items. */
 	export function expandAll(): void {
+		if (!tree) return;
 		const detailsElements = tree.querySelectorAll<HTMLDetailsElement>('details.tree-item');
 		detailsElements.forEach((details) => {
 			if (!details.open) {
@@ -62,11 +80,9 @@
 			}
 		});
 	}
-	/**
-	 * collapses all tree view items.
-	 * @type {() => void}
-	 */
+	/** collapses all tree view items. */
 	export function collapseAll(): void {
+		if (!tree) return;
 		const detailsElements = tree.querySelectorAll<HTMLDetailsElement>('details.tree-item');
 		detailsElements.forEach((details) => {
 			if (details.open) {
@@ -77,26 +93,26 @@
 	}
 
 	// Context API
-	setContext('open', open);
-	setContext('selection', selection);
-	setContext('multiple', multiple);
-	setContext('disabled', disabled);
-	setContext('padding', padding);
-	setContext('indent', indent);
-	setContext('hover', hover);
-	setContext('rounded', rounded);
-	setContext('caretOpen', caretOpen);
-	setContext('caretClosed', caretClosed);
-	setContext('hyphenOpacity', hyphenOpacity);
-	setContext('regionSummary', regionSummary);
-	setContext('regionSymbol', regionSymbol);
-	setContext('regionChildren', regionChildren);
+	untrack(() => setContext('open', open));
+	untrack(() => setContext('selection', selection));
+	untrack(() => setContext('multiple', multiple));
+	untrack(() => setContext('disabled', disabled));
+	untrack(() => setContext('padding', padding));
+	untrack(() => setContext('indent', indent));
+	untrack(() => setContext('hover', hover));
+	untrack(() => setContext('rounded', rounded));
+	untrack(() => setContext('caretOpen', caretOpen));
+	untrack(() => setContext('caretClosed', caretClosed));
+	untrack(() => setContext('hyphenOpacity', hyphenOpacity));
+	untrack(() => setContext('regionSummary', regionSummary));
+	untrack(() => setContext('regionSymbol', regionSymbol));
+	untrack(() => setContext('regionChildren', regionChildren));
 
 	// Reactive
-	$: classesBase = `${width} ${spacing} ${$$props.class ?? ''}`;
+	let classesBase = $derived(`${width} ${spacing} ${className ?? ''}`);
 
 	// Locals
-	let tree: HTMLDivElement;
+	let tree = $state<HTMLDivElement>();
 </script>
 
 <div
@@ -108,5 +124,5 @@
 	aria-label={labelledby}
 	aria-disabled={disabled}
 >
-	<slot />
+	{@render children?.()}
 </div>

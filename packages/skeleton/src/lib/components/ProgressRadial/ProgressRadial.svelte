@@ -1,38 +1,49 @@
 <!-- Reference: https://css-tricks.com/building-progress-ring-quickly/ -->
 <script lang="ts">
-	import { afterUpdate } from 'svelte';
-
 	// Types
 	import type { CssClasses } from '../../index.js';
 
-	// Props
-	/**
-	 * Set the meter fill amount. Shows as indeterminate when set `undefined`.
-	 * @type {number}
-	 */
-	export let value: number | undefined = undefined; // %
-	/** Sets the base stroke width. Scales responsively. */
-	export let stroke = 40; // px
-	/** Sets the base font size. Scales responsively. */
-	export let font = 56; // px
-	/** Sets the stoke-linecap value */
-	export let strokeLinecap: 'butt' | 'round' | 'square' = 'butt';
-	/** Provide classes to set the meter transition styles. */
-	export let transition: CssClasses = 'transition-[stroke-dashoffset]';
-
-	// Props (styles)
-	/** Provide classes to set the width. */
-	export let width: CssClasses = 'w-36';
-	/** Provide classes to set meter color. */
-	export let meter: CssClasses = 'stroke-surface-900 dark:stroke-surface-50';
-	/** Provide classes to set track color. */
-	export let track: CssClasses = 'stroke-surface-500/30';
-	/** Provide classes to set the SVG text fill color. */
-	export let fill: CssClasses = 'fill-token';
-
 	// Props A11y
-	/** Provide the ARIA labelledby value. */
-	export let labelledby = '';
+
+	interface Props {
+		class?: string;
+		/** Set the meter fill amount. Shows as indeterminate when set `undefined`. */
+		value?: number | undefined; // %
+		/** Sets the base stroke width. Scales responsively. */
+		stroke?: number; // px
+		/** Sets the base font size. Scales responsively. */
+		font?: number; // px
+		/** Sets the stoke-linecap value */
+		strokeLinecap?: 'butt' | 'round' | 'square';
+		/** Provide classes to set the meter transition styles. */
+		transition?: CssClasses;
+		/** Provide classes to set the width. */
+		width?: CssClasses;
+		/** Provide classes to set meter color. */
+		meter?: CssClasses;
+		/** Provide classes to set track color. */
+		track?: CssClasses;
+		/** Provide classes to set the SVG text fill color. */
+		fill?: CssClasses;
+		/** Provide the ARIA labelledby value. */
+		labelledby?: string;
+		children?: import('svelte').Snippet;
+	}
+
+	let {
+		class: className = '',
+		value = undefined,
+		stroke = 40,
+		font = 56,
+		strokeLinecap = 'butt',
+		transition = 'transition-[stroke-dashoffset]',
+		width = 'w-36',
+		meter = 'stroke-surface-900 dark:stroke-surface-50',
+		track = 'stroke-surface-500/30',
+		fill = 'fill-token',
+		labelledby = '',
+		children
+	}: Props = $props();
 
 	// Base Classes
 	const cBase = 'progress-radial relative overflow-hidden';
@@ -41,27 +52,10 @@
 
 	// Calculated Values
 	const baseSize = 512; // px
-	const radius: number = baseSize / 2 - stroke / 2;
-	let circumference: number = radius;
-	let dashoffset: number;
-
-	// Set Progress Amount
-	function setProgress(percent: number) {
-		circumference = radius * 2 * Math.PI;
-		dashoffset = circumference - (percent / 100) * circumference;
-	}
-
-	// On Init
-	setProgress(0);
-
-	// Reactive
-	afterUpdate(() => {
-		// If indeterminate set 25, else set the value
-		setProgress(value === undefined ? 25 : value);
-	});
-
-	// Reactive
-	$: classesBase = `${cBase} ${width} ${$$props.class ?? ''}`;
+	let radius = $derived(baseSize / 2 - stroke / 2);
+	let circumference = $derived(radius * 2 * Math.PI);
+	let dashoffset = $derived(circumference - ((value ?? 25) / 100) * circumference);
+	let classesBase = $derived(`${cBase} ${width} ${className ?? ''}`);
 </script>
 
 <figure
@@ -93,7 +87,7 @@
 		/>
 
 		<!-- Center Text -->
-		{#if value != undefined && value >= 0 && $$slots.default}
+		{#if value != undefined && value >= 0 && children}
 			<text
 				x="50%"
 				y="50%"
@@ -101,7 +95,7 @@
 				dominant-baseline="middle"
 				font-weight="bold"
 				font-size={font}
-				class="progress-radial-text {fill}"><slot /></text
+				class="progress-radial-text {fill}">{@render children?.()}</text
 			>
 		{/if}
 	</svg>

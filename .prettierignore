@@ -1,0 +1,7 @@
+archive/
+node_modules/
+dist/
+coverage/
+package-lock.json
+**/src/tailwind/generated/
+.changeset/

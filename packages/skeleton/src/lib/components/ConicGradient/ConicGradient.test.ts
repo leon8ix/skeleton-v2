@@ -12,7 +12,7 @@ describe('ConicGradient.svelte', () => {
 	it('Renders with props', () => {
 		const { getByTestId } = render(ConicGradient, {
 			props: {
-				data: [
+				stops: [
 					{ label: 'Emerald', color: ['emerald', 500], start: 0, end: 33 },
 					{ label: 'Indigo', color: ['indigo', 500], start: 33, end: 66 },
 					{ label: 'Rose', color: ['rose', 500], start: 66, end: 100 }

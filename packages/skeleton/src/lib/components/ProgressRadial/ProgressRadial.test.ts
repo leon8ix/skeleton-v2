@@ -16,10 +16,10 @@ describe('ProgressRadial.svelte', () => {
 				stroke: 20,
 				track: 'stroke-surface-300 dark:stroke-surface-700',
 				meter: 'stroke-black dark:stroke-white',
-				color: 'fill-black dark:fill-white',
+				fill: 'fill-black dark:fill-white',
 				font: 56,
-				label: 'testProgressRadial1',
-				roundedLineCap: true
+				labelledby: 'testProgressRadial1',
+				strokeLinecap: 'round'
 			}
 		});
 		expect(getByTestId('progress-radial')).toBeTruthy();

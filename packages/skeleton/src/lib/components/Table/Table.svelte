@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-
 	import { tableA11y } from './actions.js';
 
 	// Types
@@ -10,36 +8,51 @@
 	type TableEvent = {
 		selected: string[];
 	};
-	const dispatch = createEventDispatcher<TableEvent>();
-
-	// Props
-	/**
-	 * Provide the full set of table source data.
-	 * @type {TableSource}
-	 */
-	export let source: TableSource;
-	/** Enables row hover style and `on:selected` event when rows are clicked. */
-	export let interactive = false;
 
 	// Props (styles)
-	/** Override the Tailwind Element class. Replace this for a headless UI. */
-	export let element: CssClasses = 'table';
-	/** Provide classes to set the table text size. */
-	export let text: CssClasses = '';
-	/** Provide classes to set the table text color. */
-	export let color: CssClasses = '';
-	/** Provide arbitrary classes for the table head. */
-	export let regionHead: CssClasses = '';
-	/** Provide arbitrary classes for the table head cells. */
-	export let regionHeadCell: CssClasses = '';
-	/** Provide arbitrary classes for the table body. */
-	export let regionBody: CssClasses = '';
-	/** Provide arbitrary classes for the table cells. */
-	export let regionCell: CssClasses = '';
-	/** Provide arbitrary classes for the table foot. */
-	export let regionFoot: CssClasses = '';
-	/** Provide arbitrary classes for the table foot cells. */
-	export let regionFootCell: CssClasses = '';
+
+	interface Props {
+		class?: string;
+		onselected?: ((event: TableEvent['selected']) => void) | undefined;
+		/** Provide the full set of table source data. */
+		source: TableSource;
+		/** Enables row hover style and `on:selected` event when rows are clicked. */
+		interactive?: boolean;
+		/** Override the Tailwind Element class. Replace this for a headless UI. */
+		element?: CssClasses;
+		/** Provide classes to set the table text size. */
+		text?: CssClasses;
+		/** Provide classes to set the table text color. */
+		color?: CssClasses;
+		/** Provide arbitrary classes for the table head. */
+		regionHead?: CssClasses;
+		/** Provide arbitrary classes for the table head cells. */
+		regionHeadCell?: CssClasses;
+		/** Provide arbitrary classes for the table body. */
+		regionBody?: CssClasses;
+		/** Provide arbitrary classes for the table cells. */
+		regionCell?: CssClasses;
+		/** Provide arbitrary classes for the table foot. */
+		regionFoot?: CssClasses;
+		/** Provide arbitrary classes for the table foot cells. */
+		regionFootCell?: CssClasses;
+	}
+
+	let {
+		class: className = '',
+		onselected = undefined,
+		source,
+		interactive = false,
+		element = 'table',
+		text = '',
+		color = '',
+		regionHead = '',
+		regionHeadCell = '',
+		regionBody = '',
+		regionCell = '',
+		regionFoot = '',
+		regionFootCell = ''
+	}: Props = $props();
 
 	// Row Click Handler
 	function onRowClick(event: SvelteEvent<MouseEvent | KeyboardEvent, HTMLTableRowElement>, rowIndex: number): void {
@@ -49,7 +62,7 @@
 		// Prefer meta row info if available, else fallback to body row info
 		const rowMetaData = source.meta ? source.meta[rowIndex] : source.body[rowIndex];
 		/** @event {rowMetaData} selected - Fires when a table row is clicked. */
-		dispatch('selected', rowMetaData);
+		onselected?.(rowMetaData);
 	}
 
 	// Row Keydown Handler
@@ -58,8 +71,8 @@
 	}
 
 	// Reactive
-	$: classesBase = `${$$props.class || ''}`;
-	$: classesTable = `${element} ${text} ${color}`;
+	let classesBase = $derived(`${className || ''}`);
+	let classesTable = $derived(`${element} ${text} ${color}`);
 </script>
 
 <div class="table-container {classesBase}">
@@ -86,8 +99,8 @@
 				<!-- Row -->
 				<!-- prettier-ignore -->
 				<tr
-					on:click={(e) => { onRowClick(e, rowIndex); }}
-					on:keydown={(e) => { onRowKeydown(e, rowIndex); }}
+					onclick={(e) => { onRowClick(e, rowIndex); }}
+					onkeydown={(e) => { onRowKeydown(e, rowIndex); }}
 					aria-rowindex={rowIndex + 1}
 				>
 					{#each row as cell, cellIndex}

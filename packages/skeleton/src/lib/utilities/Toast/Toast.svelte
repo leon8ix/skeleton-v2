@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 	import { fly } from 'svelte/transition';
 	import { type Transition, type TransitionParams, type CssClasses, prefersReducedMotionStore } from '../../index.js';
 	import { dynamicTransition } from '../../internal/transitions.js';
@@ -16,66 +16,69 @@
 	import { getToastStore } from './stores.js';
 	const toastStore = getToastStore();
 
-	// Props
-	/** Set the toast position.
-	 * @type {'t' | 'b' | 'l' | 'r' | 'tl' | 'tr' | 'bl' | 'br'}
-	 */
-	export let position: 't' | 'b' | 'l' | 'r' | 'tl' | 'tr' | 'bl' | 'br' = 'b';
-	/** Maximum toasts that can show at once. */
-	export let max = 3;
-
-	// Props (styles)
-	/** Provide classes to set the background color. */
-	export let background: CssClasses = 'variant-filled-secondary';
-	/** Provide classes to set width styles. */
-	export let width: CssClasses = 'max-w-[640px]';
-	/** Provide classes to set the text color. */
-	export let color: CssClasses = '';
-	/** Provide classes to set the padding. */
-	export let padding: CssClasses = 'p-4';
-	/** Provide classes to set toast horizontal spacing. */
-	export let spacing: CssClasses = 'space-x-4';
-	/** Provide classes to set the border radius styles. */
-	export let rounded: CssClasses = 'rounded-container-token';
-	/** Provide classes to set the border box shadow. */
-	export let shadow: CssClasses = 'shadow-lg';
-	/** Provide a class to override the z-index */
-	export let zIndex: CssClasses = 'z-[888]';
-
-	// Props (buttons)
-	/** Provide styles for the action button. */
-	export let buttonAction: CssClasses = 'btn variant-filled';
-	/** Provide styles for the dismiss button. */
-	export let buttonDismiss: CssClasses = 'btn-icon btn-icon-sm variant-filled';
-	/** The button label text. */
-	export let buttonDismissLabel = '✕';
-
 	// Props (transition)
-	/**
-	 * Enable/Disable transitions
-	 * @type {boolean}
-	 */
-	export let transitions = !$prefersReducedMotionStore;
-	/**
-	 * Provide the transition to used on entry.
-	 * @type {TransitionIn}
-	 */
-	export let transitionIn: TransitionIn = fly as TransitionIn;
-	/**
-	 * Transition params provided to `transitionIn`.
-	 * @type {TransitionParams}
-	 */
-	export let transitionInParams: TransitionParams<TransitionIn> = { duration: 250 };
-	/**
-	 * Provide the transition to used on exit.
-	 * @type {TransitionOut}
-	 */
-	export let transitionOut: TransitionOut = fly as TransitionOut;
-	/**
-	 * Transition params provided to `transitionOut`.
-	 * @type {TransitionParams}
-	 */
-	export let transitionOutParams: TransitionParams<TransitionOut> = { duration: 250 };
+
+	interface Props {
+		class?: string;
+		/** Set the toast position. */
+		position?: 't' | 'b' | 'l' | 'r' | 'tl' | 'tr' | 'bl' | 'br';
+		/** Maximum toasts that can show at once. */
+		max?: number;
+		/** Provide classes to set the background color. */
+		background?: CssClasses;
+		/** Provide classes to set width styles. */
+		width?: CssClasses;
+		/** Provide classes to set the text color. */
+		color?: CssClasses;
+		/** Provide classes to set the padding. */
+		padding?: CssClasses;
+		/** Provide classes to set toast horizontal spacing. */
+		spacing?: CssClasses;
+		/** Provide classes to set the border radius styles. */
+		rounded?: CssClasses;
+		/** Provide classes to set the border box shadow. */
+		shadow?: CssClasses;
+		/** Provide a class to override the z-index */
+		zIndex?: CssClasses;
+		/** Provide styles for the action button. */
+		buttonAction?: CssClasses;
+		/** Provide styles for the dismiss button. */
+		buttonDismiss?: CssClasses;
+		/** The button label text. */
+		buttonDismissLabel?: string;
+		/** Enable/Disable transitions */
+		transitions?: boolean;
+		/** Provide the transition to used on entry. */
+		transitionIn?: TransitionIn;
+		/** Transition params provided to `transitionIn`. */
+		transitionInParams?: TransitionParams<TransitionIn>;
+		/** Provide the transition to used on exit. */
+		transitionOut?: TransitionOut;
+		/** Transition params provided to `transitionOut`. */
+		transitionOutParams?: TransitionParams<TransitionOut>;
+	}
+
+	let {
+		class: className = '',
+		position = 'b',
+		max = 3,
+		background = 'variant-filled-secondary',
+		width = 'max-w-[640px]',
+		color = '',
+		padding = 'p-4',
+		spacing = 'space-x-4',
+		rounded = 'rounded-container-token',
+		shadow = 'shadow-lg',
+		zIndex = 'z-[888]',
+		buttonAction = 'btn variant-filled',
+		buttonDismiss = 'btn-icon btn-icon-sm variant-filled',
+		buttonDismissLabel = '✕',
+		transitions = !$prefersReducedMotionStore,
+		transitionIn = fly as TransitionIn,
+		transitionInParams = { duration: 250 },
+		transitionOut = fly as TransitionOut,
+		transitionOutParams = { duration: 250 }
+	}: Props = $props();
 
 	// Base Classes
 	const cWrapper = 'flex fixed top-0 left-0 right-0 bottom-0 pointer-events-none';
@@ -84,25 +87,29 @@
 	const cToastActions = 'flex items-center space-x-2';
 
 	// Local
-	let cPosition: string;
-	let cAlign: string; // items-center
-	let animAxis = { x: 0, y: 0 };
-
-	// Set Position
-	// prettier-ignore
-	switch (position) {
-		// Middles
-		case('t'): cPosition = 'justify-center items-start'; cAlign = 'items-center'; animAxis = { x: 0, y: -100 }; break;
-		case('b'): cPosition = 'justify-center items-end'; cAlign = 'items-center'; animAxis = { x: 0, y: 100 }; break;
-		case('l'): cPosition = 'justify-start items-center'; cAlign = 'items-start'; animAxis = { x: -100, y: 0 }; break;
-		case('r'): cPosition = 'justify-end items-center'; cAlign = 'items-end'; animAxis = { x: 100, y: 0 }; break;
-		// Corners
-		case ('tl'): cPosition = 'justify-start items-start'; cAlign = 'items-start'; animAxis = { x: -100, y: 0 }; break;
-		case ('tr'): cPosition = 'justify-end items-start'; cAlign = 'items-end'; animAxis = { x: 100, y: 0 }; break;
-		case ('bl'): cPosition = 'justify-start items-end'; cAlign = 'items-start'; animAxis = { x: -100, y: 0 }; break;
-		case ('br'): cPosition = 'justify-end items-end'; cAlign = 'items-end'; animAxis = { x: 100, y: 0 }; break;
-	}
-
+	let layout = $derived.by(() => {
+		switch (position) {
+			case 't':
+				return { position: 'justify-center items-start', align: 'items-center', axis: { x: 0, y: -100 } };
+			case 'b':
+				return { position: 'justify-center items-end', align: 'items-center', axis: { x: 0, y: 100 } };
+			case 'l':
+				return { position: 'justify-start items-center', align: 'items-start', axis: { x: -100, y: 0 } };
+			case 'r':
+				return { position: 'justify-end items-center', align: 'items-end', axis: { x: 100, y: 0 } };
+			case 'tl':
+				return { position: 'justify-start items-start', align: 'items-start', axis: { x: -100, y: 0 } };
+			case 'tr':
+				return { position: 'justify-end items-start', align: 'items-end', axis: { x: 100, y: 0 } };
+			case 'bl':
+				return { position: 'justify-start items-end', align: 'items-start', axis: { x: -100, y: 0 } };
+			case 'br':
+				return { position: 'justify-end items-end', align: 'items-end', axis: { x: 100, y: 0 } };
+		}
+	});
+	let cPosition = $derived(layout.position);
+	let cAlign = $derived(layout.align);
+	let animAxis = $derived(layout.axis);
 	function onAction(index: number): void {
 		$toastStore[index]?.action?.response();
 		toastStore.close($toastStore[index].id);
@@ -122,18 +129,20 @@
 		}
 	}
 
-	let wrapperVisible = false;
+	let wrapperVisible = $state(false);
 
 	// Reactive
-	$: classesWrapper = `${cWrapper} ${cPosition} ${zIndex} ${$$props.class || ''}`;
-	$: classesSnackbar = `${cSnackbar} ${cAlign} ${padding}`;
-	$: classesToast = `${cToast} ${width} ${color} ${padding} ${spacing} ${rounded} ${shadow}`;
+	let classesWrapper = $derived(`${cWrapper} ${cPosition} ${zIndex} ${className || ''}`);
+	let classesSnackbar = $derived(`${cSnackbar} ${cAlign} ${padding}`);
+	let classesToast = $derived(`${cToast} ${width} ${color} ${padding} ${spacing} ${rounded} ${shadow}`);
 	// Filtered Toast Store
-	$: filteredToasts = Array.from($toastStore).slice(0, max);
+	let filteredToasts = $derived(Array.from($toastStore).slice(0, max));
 
-	$: if (filteredToasts.length) {
-		wrapperVisible = true;
-	}
+	$effect.pre(() => {
+		if (filteredToasts.length) {
+			wrapperVisible = true;
+		}
+	});
 </script>
 
 {#if filteredToasts.length > 0 || wrapperVisible}
@@ -154,12 +163,12 @@
 						params: { x: animAxis.x, y: animAxis.y, ...transitionOutParams },
 						enabled: transitions
 					}}
-					on:outroend={() => {
+					onoutroend={() => {
 						const outroFinishedForLastToastOnQueue = filteredToasts.length === 0;
 						if (outroFinishedForLastToastOnQueue) wrapperVisible = false;
 					}}
-					on:mouseenter={() => onMouseEnter(i)}
-					on:mouseleave={() => onMouseLeave(i)}
+					onmouseenter={() => onMouseEnter(i)}
+					onmouseleave={() => onMouseLeave(i)}
 					role={t.hideDismiss ? 'alert' : 'alertdialog'}
 					aria-live="polite"
 				>
@@ -168,8 +177,8 @@
 						<div class="text-base">{@html t.message}</div>
 						{#if t.action || !t.hideDismiss}
 							<div class="toast-actions {cToastActions}">
-								{#if t.action}<button class={buttonAction} on:click={() => onAction(i)}>{@html t.action.label}</button>{/if}
-								{#if !t.hideDismiss}<button class={buttonDismiss} aria-label="Dismiss toast" on:click={() => toastStore.close(t.id)}
+								{#if t.action}<button class={buttonAction} onclick={() => onAction(i)}>{@html t.action.label}</button>{/if}
+								{#if !t.hideDismiss}<button class={buttonDismiss} aria-label="Dismiss toast" onclick={() => toastStore.close(t.id)}
 										>{buttonDismissLabel}</button
 									>{/if}
 							</div>

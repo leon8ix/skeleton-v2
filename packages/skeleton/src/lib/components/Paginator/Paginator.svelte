@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import { untrack } from 'svelte';
 	// Types
 	import type { PaginationSettings } from './types.js';
 	import type { CssClasses } from '../../index.js';
@@ -10,99 +10,106 @@
 		amount: number;
 		page: number;
 	};
-	const dispatch = createEventDispatcher<PaginatorEvent>();
-
-	// Props
-	/**
-	 * Pass the page setting object.
-	 * @type {PaginationSettings}
-	 */
-	export let settings: PaginationSettings = { page: 0, limit: 5, size: 0, amounts: [1, 2, 5, 10] };
-	/** Sets selection and buttons to disabled state on-demand. */
-	export let disabled = false;
-	/** Show Previous and Next buttons. */
-	export let showPreviousNextButtons = true;
-	/** Show First and Last buttons. */
-	export let showFirstLastButtons = false;
-	/** Displays a numeric row of page buttons. */
-	export let showNumerals = false;
-	/** Maximum number of active page siblings in the numeric row.*/
-	export let maxNumerals = 1;
-	/** Provide classes to set flexbox justification. */
-	export let justify: CssClasses = 'justify-between';
-
-	// Props (select)
-	/** Provide classes to style the select input. */
-	export let select: CssClasses = 'select min-w-[150px]';
-	/** Set the text for the amount selection input. */
-	export let amountText = 'Items';
-
-	// Props (control)
-	/** Set the base classes for the control element. */
-	export let regionControl: CssClasses = 'btn-group';
-	/** Provide variant style for the control button group. */
-	export let controlVariant: CssClasses = 'variant-filled';
-	/** Provide separator style for the control button group.  */
-	export let controlSeparator: CssClasses = '';
-
-	// Props (buttons)
-	/** Provide arbitrary classes to the active page buttons. */
-	export let active: CssClasses = 'variant-filled-primary';
-	/*** Set the base button classes. */
-	export let buttonClasses: CssClasses = '!px-3 !py-1.5 fill-current';
-	/**
-	 * Set the label for the Previous button.
-	 * @type {string}
-	 */
-	export let buttonTextPrevious: CssClasses = leftArrow;
-	/**
-	 * Set the label for the Next button.
-	 * @type {string}
-	 */
-	export let buttonTextNext: CssClasses = rightArrow;
-	/**
-	 * Set the label for the First button.
-	 * @type {string}
-	 */
-	export let buttonTextFirst: CssClasses = leftAngles;
-	/**
-	 * Set the label for the Last button.
-	 * @type {string}
-	 */
-	export let buttonTextLast: CssClasses = rightAngles;
-	/** Set the label for the pages separator. */
-	export let separatorText = 'of';
 
 	// Props (A11y)
-	/** Provide the ARIA label for the First page button. */
-	export let labelFirst = 'First page';
-	/** Provide the ARIA label for the Previous page button. */
-	export let labelPrevious = 'Previous page';
-	/** Provide the ARIA label for the Next page button. */
-	export let labelNext = 'Next page';
-	/** Provide the ARIA label for the Last page button. */
-	export let labelLast = 'Last page';
+
+	interface Props {
+		class?: string;
+		onamount?: ((event: PaginatorEvent['amount']) => void) | undefined;
+		onpage?: ((event: PaginatorEvent['page']) => void) | undefined;
+		/** Pass the page setting object. */
+		settings?: PaginationSettings;
+		/** Sets selection and buttons to disabled state on-demand. */
+		disabled?: boolean;
+		/** Show Previous and Next buttons. */
+		showPreviousNextButtons?: boolean;
+		/** Show First and Last buttons. */
+		showFirstLastButtons?: boolean;
+		/** Displays a numeric row of page buttons. */
+		showNumerals?: boolean;
+		/** Maximum number of active page siblings in the numeric row. */
+		maxNumerals?: number;
+		/** Provide classes to set flexbox justification. */
+		justify?: CssClasses;
+		/** Provide classes to style the select input. */
+		select?: CssClasses;
+		/** Set the text for the amount selection input. */
+		amountText?: string;
+		/** Set the base classes for the control element. */
+		regionControl?: CssClasses;
+		/** Provide variant style for the control button group. */
+		controlVariant?: CssClasses;
+		/** Provide separator style for the control button group. */
+		controlSeparator?: CssClasses;
+		/** Provide arbitrary classes to the active page buttons. */
+		active?: CssClasses;
+		/** Set the base button classes. */
+		buttonClasses?: CssClasses;
+		/** Set the label for the Previous button. */
+		buttonTextPrevious?: CssClasses;
+		/** Set the label for the Next button. */
+		buttonTextNext?: CssClasses;
+		/** Set the label for the First button. */
+		buttonTextFirst?: CssClasses;
+		/** Set the label for the Last button. */
+		buttonTextLast?: CssClasses;
+		/** Set the label for the pages separator. */
+		separatorText?: string;
+		/** Provide the ARIA label for the First page button. */
+		labelFirst?: string;
+		/** Provide the ARIA label for the Previous page button. */
+		labelPrevious?: string;
+		/** Provide the ARIA label for the Next page button. */
+		labelNext?: string;
+		/** Provide the ARIA label for the Last page button. */
+		labelLast?: string;
+	}
+
+	let {
+		class: className = '',
+		onamount = undefined,
+		onpage = undefined,
+		settings = $bindable({ page: 0, limit: 5, size: 0, amounts: [1, 2, 5, 10] }),
+		disabled = false,
+		showPreviousNextButtons = true,
+		showFirstLastButtons = false,
+		showNumerals = false,
+		maxNumerals = 1,
+		justify = 'justify-between',
+		select = 'select min-w-[150px]',
+		amountText = 'Items',
+		regionControl = 'btn-group',
+		controlVariant = 'variant-filled',
+		controlSeparator = '',
+		active = 'variant-filled-primary',
+		buttonClasses = '!px-3 !py-1.5 fill-current',
+		buttonTextPrevious = leftArrow,
+		buttonTextNext = rightArrow,
+		buttonTextFirst = leftAngles,
+		buttonTextLast = rightAngles,
+		separatorText = 'of',
+		labelFirst = 'First page',
+		labelPrevious = 'Previous page',
+		labelNext = 'Next page',
+		labelLast = 'Last page'
+	}: Props = $props();
 
 	// Base Classes
 	const cBase = 'flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4';
 	const cLabel = 'w-full md:w-auto';
 
 	// Local
-	let lastPage = Math.max(0, Math.ceil(settings.size / settings.limit - 1));
-	let controlPages: number[] = getNumerals();
+	let lastPage = $derived(Math.max(0, Math.ceil(settings.size / settings.limit - 1)));
+	let controlPages = $derived(getNumerals());
 
 	function onChangeLength(): void {
-		/** @event {{ length: number }} amount - Fires when the amount selection input changes.  */
-		dispatch('amount', settings.limit);
-
-		lastPage = Math.max(0, Math.ceil(settings.size / settings.limit - 1));
+		/** @event {{ length: number }} amount - Fires when the amount selection input changes. */
+		onamount?.(settings.limit);
 
 		// ensure page in limit range
 		if (settings.page > lastPage) {
 			settings.page = lastPage;
 		}
-
-		controlPages = getNumerals();
 	}
 
 	function gotoPage(page: number) {
@@ -110,8 +117,7 @@
 
 		settings.page = page;
 		/** @event {{ page: number }} page Fires when the next/back buttons are pressed. */
-		dispatch('page', settings.page);
-		controlPages = getNumerals();
+		onpage?.(settings.page);
 	}
 
 	// Full row - no ellipsis
@@ -153,22 +159,23 @@
 		return pages;
 	}
 
-	function updateSize(size: number) {
-		lastPage = Math.max(0, Math.ceil(size / settings.limit - 1));
-		controlPages = getNumerals();
-	}
-
 	// State
-	$: classesButtonActive = (page: number) => {
+	let classesButtonActive = $derived((page: number) => {
 		return page === settings.page ? `${active} pointer-events-none` : '';
-	};
-	$: maxNumerals, onChangeLength();
-	$: updateSize(settings.size);
+	});
+	$effect.pre(() => {
+		if (settings.page > lastPage) settings.page = lastPage;
+	});
+	$effect.pre(() => {
+		maxNumerals;
+		untrack(onChangeLength);
+	});
+
 	// Reactive Classes
-	$: classesBase = `${cBase} ${justify} ${$$props.class ?? ''}`;
-	$: classesLabel = `${cLabel}`;
-	$: classesSelect = `${select}`;
-	$: classesControls = `${regionControl} ${controlVariant} ${controlSeparator}`;
+	let classesBase = $derived(`${cBase} ${justify} ${className ?? ''}`);
+	let classesLabel = $derived(`${cLabel}`);
+	let classesSelect = $derived(`${select}`);
+	let classesControls = $derived(`${regionControl} ${controlVariant} ${controlSeparator}`);
 </script>
 
 <div class="paginator {classesBase}" data-testid="paginator">
@@ -177,7 +184,7 @@
 		<label class="paginator-label {classesLabel}">
 			<select
 				bind:value={settings.limit}
-				on:change={onChangeLength}
+				onchange={onChangeLength}
 				class="paginator-select {classesSelect}"
 				{disabled}
 				aria-label="Select Amount"
@@ -194,7 +201,7 @@
 				type="button"
 				aria-label={labelFirst}
 				class={buttonClasses}
-				on:click={() => {
+				onclick={() => {
 					gotoPage(0);
 				}}
 				disabled={disabled || settings.page === 0}
@@ -208,7 +215,7 @@
 				type="button"
 				aria-label={labelPrevious}
 				class={buttonClasses}
-				on:click={() => {
+				onclick={() => {
 					gotoPage(settings.page - 1);
 				}}
 				disabled={disabled || settings.page === 0}
@@ -227,7 +234,7 @@
 		{:else}
 			<!-- Numeric Row -->
 			{#each controlPages as page}
-				<button type="button" {disabled} class="{buttonClasses} {classesButtonActive(page)}" on:click={() => gotoPage(page)}>
+				<button type="button" {disabled} class="{buttonClasses} {classesButtonActive(page)}" onclick={() => gotoPage(page)}>
 					{page >= 0 ? page + 1 : '...'}
 				</button>
 			{/each}
@@ -238,7 +245,7 @@
 				type="button"
 				aria-label={labelNext}
 				class={buttonClasses}
-				on:click={() => {
+				onclick={() => {
 					gotoPage(settings.page + 1);
 				}}
 				disabled={disabled || (settings.page + 1) * settings.limit >= settings.size}
@@ -252,7 +259,7 @@
 				type="button"
 				aria-label={labelLast}
 				class={buttonClasses}
-				on:click={() => {
+				onclick={() => {
 					gotoPage(lastPage);
 				}}
 				disabled={disabled || (settings.page + 1) * settings.limit >= settings.size}

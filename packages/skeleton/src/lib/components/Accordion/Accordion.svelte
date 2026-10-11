@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 	import { slide } from 'svelte/transition';
 	import { type Transition, type TransitionParams, type CssClasses, prefersReducedMotionStore } from '../../index.js';
 
@@ -9,100 +9,102 @@
 </script>
 
 <script lang="ts" generics="TransitionIn extends Transition = SlideTransition, TransitionOut extends Transition = SlideTransition">
-	// Slots:
+	import { untrack } from 'svelte';
 	// NOTE: we cannot describe the default slot.
 
 	import { writable, type Writable } from 'svelte/store';
 	import { setContext } from 'svelte';
 
-	// Props
-	/** Set the auto-collapse mode. */
-	export let autocollapse = false;
-
-	// Props (parent)
-	/** Provide classes to set the accordion width. */
-	export let width: CssClasses = 'w-full';
-	/** Provide classes to set the vertical spacing between items. */
-	export let spacing: CssClasses = 'space-y-1';
-
-	// Props (children)
-	/** Set the accordion disabled state for all items. */
-	export let disabled = false;
-	/** Provide classes to set the accordion item padding styles. */
-	export let padding: CssClasses = 'py-2 px-4';
-	/** Provide classes to set the accordion item hover styles. */
-	export let hover: CssClasses = 'hover:bg-primary-hover-token';
-	/** Provide classes to set the accordion item rounded styles. */
-	export let rounded: CssClasses = 'rounded-container-token';
-
-	// Props (caret)
-	/** Set the rotation of the item caret in the open state. */
-	export let caretOpen: CssClasses = 'rotate-180';
-	/** Set the rotation of the item caret in the closed state. */
-	export let caretClosed: CssClasses = '';
-
-	// Props (regions)
-	/** Provide arbitrary classes to the trigger button region. */
-	export let regionControl: CssClasses = '';
-	/** Provide arbitrary classes to the content panel region. */
-	export let regionPanel: CssClasses = 'space-y-4';
-	/** Provide arbitrary classes to the caret icon region. */
-	export let regionCaret: CssClasses = '';
-
 	// Props (transition)
-	/**
-	 * Enable/Disable transitions
-	 * @type {boolean}
-	 */
-	export let transitions = !$prefersReducedMotionStore;
-	/**
-	 * Provide the transition to used on entry.
-	 * @type {TransitionIn}
-	 */
-	export let transitionIn: TransitionIn = slide as TransitionIn;
-	/**
-	 * Transition params provided to `transitionIn`.
-	 * @type {TransitionParams}
-	 */
-	export let transitionInParams: TransitionParams<TransitionIn> = { duration: 200 };
-	/**
-	 * Provide the transition to used on exit.
-	 * @type {TransitionOut}
-	 */
-	export let transitionOut: TransitionOut = slide as TransitionOut;
-	/**
-	 * Transition params provided to `transitionOut`.
-	 * @type {TransitionParams}
-	 */
-	export let transitionOutParams: TransitionParams<TransitionOut> = { duration: 200 };
+
+	interface Props {
+		class?: string;
+		/** Set the auto-collapse mode. */
+		autocollapse?: boolean;
+		/** Provide classes to set the accordion width. */
+		width?: CssClasses;
+		/** Provide classes to set the vertical spacing between items. */
+		spacing?: CssClasses;
+		/** Set the accordion disabled state for all items. */
+		disabled?: boolean;
+		/** Provide classes to set the accordion item padding styles. */
+		padding?: CssClasses;
+		/** Provide classes to set the accordion item hover styles. */
+		hover?: CssClasses;
+		/** Provide classes to set the accordion item rounded styles. */
+		rounded?: CssClasses;
+		/** Set the rotation of the item caret in the open state. */
+		caretOpen?: CssClasses;
+		/** Set the rotation of the item caret in the closed state. */
+		caretClosed?: CssClasses;
+		/** Provide arbitrary classes to the trigger button region. */
+		regionControl?: CssClasses;
+		/** Provide arbitrary classes to the content panel region. */
+		regionPanel?: CssClasses;
+		/** Provide arbitrary classes to the caret icon region. */
+		regionCaret?: CssClasses;
+		/** Enable/Disable transitions */
+		transitions?: boolean;
+		/** Provide the transition to used on entry. */
+		transitionIn?: TransitionIn;
+		/** Transition params provided to `transitionIn`. */
+		transitionInParams?: TransitionParams<TransitionIn>;
+		/** Provide the transition to used on exit. */
+		transitionOut?: TransitionOut;
+		/** Transition params provided to `transitionOut`. */
+		transitionOutParams?: TransitionParams<TransitionOut>;
+		children?: import('svelte').Snippet;
+	}
+
+	let {
+		class: className = '',
+		autocollapse = false,
+		width = 'w-full',
+		spacing = 'space-y-1',
+		disabled = false,
+		padding = 'py-2 px-4',
+		hover = 'hover:bg-primary-hover-token',
+		rounded = 'rounded-container-token',
+		caretOpen = 'rotate-180',
+		caretClosed = '',
+		regionControl = '',
+		regionPanel = 'space-y-4',
+		regionCaret = '',
+		transitions = !$prefersReducedMotionStore,
+		transitionIn = slide as TransitionIn,
+		transitionInParams = { duration: 200 },
+		transitionOut = slide as TransitionOut,
+		transitionOutParams = { duration: 200 },
+		children
+	}: Props = $props();
 
 	// Local
 	const active: Writable<string | null> = writable(null);
 
 	// Context API
-	setContext('active', active);
-	setContext('autocollapse', autocollapse);
-	setContext('disabled', disabled);
-	setContext('padding', padding);
-	setContext('hover', hover);
-	setContext('rounded', rounded);
-	setContext('caretOpen', caretOpen);
-	setContext('caretClosed', caretClosed);
-	setContext('regionControl', regionControl);
-	setContext('regionPanel', regionPanel);
-	setContext('regionCaret', regionCaret);
-	setContext('transitions', transitions);
-	setContext('transitionIn', transitionIn);
-	setContext('transitionInParams', transitionInParams);
-	setContext('transitionOut', transitionOut);
-	setContext('transitionOutParams', transitionOutParams);
+	untrack(() => setContext('active', active));
+	untrack(() => setContext('autocollapse', autocollapse));
+	untrack(() => setContext('disabled', disabled));
+	untrack(() => setContext('padding', padding));
+	untrack(() => setContext('hover', hover));
+	untrack(() => setContext('rounded', rounded));
+	untrack(() => setContext('caretOpen', caretOpen));
+	untrack(() => setContext('caretClosed', caretClosed));
+	untrack(() => setContext('regionControl', regionControl));
+	untrack(() => setContext('regionPanel', regionPanel));
+	untrack(() => setContext('regionCaret', regionCaret));
+	untrack(() => setContext('transitions', transitions));
+	untrack(() => setContext('transitionIn', transitionIn));
+	untrack(() => setContext('transitionInParams', transitionInParams));
+	untrack(() => setContext('transitionOut', transitionOut));
+	untrack(() => setContext('transitionOutParams', transitionOutParams));
 
 	// Reactive
-	$: classesBase = `${width} ${spacing} ${$$props.class ?? ''}`;
+	let classesBase = $derived(`${width} ${spacing} ${className ?? ''}`);
 </script>
 
 <!-- @component The Accordion parent element. -->
 
 <div class="accordion {classesBase}" data-testid="accordion">
-	<slot />
+	{@render children?.()}
 </div>

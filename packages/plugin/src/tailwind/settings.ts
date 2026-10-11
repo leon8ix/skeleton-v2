@@ -19,8 +19,6 @@ export const settings = {
 	]
 } as const;
 
-export type CssClasses = {
-	[className: string]: string | CssClasses;
-};
+export type CssClasses = Record<string, import('postcss-js').CssInJs>;
 
 export default settings;

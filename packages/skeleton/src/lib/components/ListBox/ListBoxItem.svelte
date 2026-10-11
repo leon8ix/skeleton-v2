@@ -1,9 +1,6 @@
 <script lang="ts">
 	// Slots
-	/**
-	 * @slot lead - Positioned on the left of each row item.
-	 * @slot trail - Positioned on the right of each row item.
-	 */
+	/** @slot lead - Positioned on the left of each row item. @slot trail - Positioned on the right of each row item. */
 
 	import { getContext } from 'svelte';
 
@@ -11,23 +8,58 @@
 	import type { CssClasses, SvelteEvent } from '../../index.js';
 
 	// Props
-	/** Set the radio group binding value. */
-	export let group: any;
-	/** Set a unique name value for the input. */
-	export let name: string;
-	/** Set the input's value. */
-	export let value: any;
 
-	// Context
-	export let disabled: boolean = getContext('disabled');
-	export let multiple: string = getContext('multiple');
-	export let rounded: CssClasses = getContext('rounded');
-	export let active: CssClasses = getContext('active');
-	export let hover: CssClasses = getContext('hover');
-	export let padding: CssClasses = getContext('padding');
-	export let regionLead: CssClasses = getContext('regionLead');
-	export let regionDefault: CssClasses = getContext('regionDefault');
-	export let regionTrail: CssClasses = getContext('regionTrail');
+	interface Props {
+		class?: string;
+		onkeydown?: ((event: KeyboardEvent) => void) | undefined;
+		onkeyup?: ((event: KeyboardEvent) => void) | undefined;
+		onkeypress?: ((event: KeyboardEvent) => void) | undefined;
+		onclick?: ((event: MouseEvent) => void) | undefined;
+		onchange?: ((event: Event) => void) | undefined;
+		/** Set the radio group binding value. */
+		group: any;
+		/** Set a unique name value for the input. */
+		name: string;
+		/** Set the input's value. */
+		value: any;
+		// Context
+		disabled?: boolean;
+		multiple?: boolean;
+		rounded?: CssClasses;
+		active?: CssClasses;
+		hover?: CssClasses;
+		padding?: CssClasses;
+		regionLead?: CssClasses;
+		regionDefault?: CssClasses;
+		regionTrail?: CssClasses;
+		lead?: import('svelte').Snippet;
+		children?: import('svelte').Snippet;
+		trail?: import('svelte').Snippet;
+	}
+
+	let {
+		class: className = '',
+		onkeydown = undefined,
+		onkeyup = undefined,
+		onkeypress = undefined,
+		onclick = undefined,
+		onchange = undefined,
+		group = $bindable(),
+		name,
+		value,
+		disabled = getContext<NonNullable<Props['disabled']>>('disabled'),
+		multiple = getContext<NonNullable<Props['multiple']>>('multiple'),
+		rounded = getContext<NonNullable<Props['rounded']>>('rounded'),
+		active = getContext<NonNullable<Props['active']>>('active'),
+		hover = getContext<NonNullable<Props['hover']>>('hover'),
+		padding = getContext<NonNullable<Props['padding']>>('padding'),
+		regionLead = getContext<NonNullable<Props['regionLead']>>('regionLead'),
+		regionDefault = getContext<NonNullable<Props['regionDefault']>>('regionDefault'),
+		regionTrail = getContext<NonNullable<Props['regionTrail']>>('regionTrail'),
+		lead,
+		children,
+		trail
+	}: Props = $props();
 
 	// Classes
 	const cBase = 'cursor-pointer -outline-offset-[3px]';
@@ -35,8 +67,8 @@
 	const cLabel = 'flex items-center space-x-4';
 
 	// Local
-	let checked: boolean;
-	let elemInput: HTMLElement;
+
+	let elemInput = $state<HTMLElement>();
 
 	// Functionality
 	function areDeeplyEqual(param1: unknown, param2: unknown) {
@@ -59,35 +91,18 @@
 		return true;
 	}
 
-	// Svelte Checkbox Bugfix
-	// GitHub: https://github.com/sveltejs/svelte/issues/2308
-	// REPL: https://svelte.dev/repl/de117399559f4e7e9e14e2fc9ab243cc?version=3.12.1
-	$: if (multiple) updateCheckbox(group);
-	$: if (multiple) updateGroup(checked);
-	function updateCheckbox(group: any) {
-		checked = group.indexOf(value) >= 0;
-	}
-	function updateGroup(checked: boolean) {
-		const index = group.indexOf(value);
-		if (checked) {
-			if (index < 0) {
-				group.push(value);
-				group = group;
-			}
-		} else {
-			if (index >= 0) {
-				group.splice(index, 1);
-				group = group;
-			}
-		}
-	}
-
 	// A11y Key Down Handler
 	function onKeyDown(event: SvelteEvent<KeyboardEvent, HTMLDivElement>): void {
 		if (['Enter', 'Space'].includes(event.code)) {
 			event.preventDefault();
-			elemInput.click();
+			elemInput?.click();
 		}
+	}
+
+	// Native bind:group only groups inputs within one component instance.
+	function onCheckboxChange(event: Event & { currentTarget: HTMLInputElement }): void {
+		group = event.currentTarget.checked ? [...group, value] : group.filter((entry: unknown) => !areDeeplyEqual(entry, value));
+		onchange?.(event);
 	}
 
 	// Base Classes
@@ -96,14 +111,14 @@
 	const cRegionTrail = '';
 
 	// Reactive
-	$: selected = multiple ? group.some((groupVal: unknown) => areDeeplyEqual(value, groupVal)) : areDeeplyEqual(group, value);
-	$: classesActive = selected ? active : !disabled ? hover : '';
-	$: classesDisabled = disabled ? cDisabled : '';
-	$: classesBase = `${cBase} ${classesDisabled} ${rounded} ${padding} ${classesActive} ${$$props.class ?? ''}`;
-	$: classesLabel = `${cLabel}`;
-	$: classesRegionLead = `${cRegionLead} ${regionLead}`;
-	$: classesRegionDefault = `${cRegionDefault} ${regionDefault}`;
-	$: classesRegionTrail = `${cRegionTrail} ${regionTrail}`;
+	let selected = $derived(multiple ? group.some((groupVal: unknown) => areDeeplyEqual(value, groupVal)) : areDeeplyEqual(group, value));
+	let classesActive = $derived(selected ? active : !disabled ? hover : '');
+	let classesDisabled = $derived(disabled ? cDisabled : '');
+	let classesBase = $derived(`${cBase} ${classesDisabled} ${rounded} ${padding} ${classesActive} ${className ?? ''}`);
+	let classesLabel = $derived(`${cLabel}`);
+	let classesRegionLead = $derived(`${cRegionLead} ${regionLead}`);
+	let classesRegionDefault = $derived(`${cRegionDefault} ${regionDefault}`);
+	let classesRegionTrail = $derived(`${cRegionTrail} ${regionTrail}`);
 </script>
 
 <label>
@@ -114,27 +129,49 @@
 		role="option"
 		aria-selected={selected}
 		tabindex="0"
-		on:keydown={onKeyDown}
-		on:keydown
-		on:keyup
-		on:keypress
+		onkeydown={(event) => {
+			onKeyDown(event);
+			onkeydown?.(event);
+		}}
+		onkeyup={(event) => onkeyup?.(event)}
+		onkeypress={(event) => onkeypress?.(event)}
 	>
 		<!-- NOTE: Don't use `hidden` as it prevents `required` from operating -->
 		<div class="h-0 w-0 overflow-hidden">
 			{#if multiple}
-				<input {disabled} bind:this={elemInput} type="checkbox" {name} {value} bind:checked tabindex="-1" on:click on:change />
+				<input
+					{disabled}
+					bind:this={elemInput}
+					type="checkbox"
+					{name}
+					{value}
+					checked={selected}
+					tabindex="-1"
+					onclick={(event) => onclick?.(event)}
+					onchange={onCheckboxChange}
+				/>
 			{:else}
-				<input {disabled} bind:this={elemInput} type="radio" bind:group {name} {value} tabindex="-1" on:click on:change />
+				<input
+					{disabled}
+					bind:this={elemInput}
+					type="radio"
+					bind:group
+					{name}
+					{value}
+					tabindex="-1"
+					onclick={(event) => onclick?.(event)}
+					onchange={(event) => onchange?.(event)}
+				/>
 			{/if}
 		</div>
 		<!-- <slot /> -->
 		<div class="listbox-label {classesLabel}">
 			<!-- Slot: Lead -->
-			{#if $$slots.lead}<div class="listbox-label-lead {classesRegionLead}"><slot name="lead" /></div>{/if}
+			{#if lead}<div class="listbox-label-lead {classesRegionLead}">{@render lead?.()}</div>{/if}
 			<!-- Slot: Default -->
-			<div class="listbox-label-content {classesRegionDefault}"><slot /></div>
+			<div class="listbox-label-content {classesRegionDefault}">{@render children?.()}</div>
 			<!-- Slot: Trail -->
-			{#if $$slots.trail}<div class="listbox-label-trail {classesRegionTrail}"><slot name="trail" /></div>{/if}
+			{#if trail}<div class="listbox-label-trail {classesRegionTrail}">{@render trail?.()}</div>{/if}
 		</div>
 	</div>
 </label>

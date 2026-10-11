@@ -1,53 +1,70 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	// Slots
-	/**
-	 * @slot panel - An optional region to house tab content.
-	 */
+	/** @slot panel - An optional region to house tab content. */
 
 	import { setContext } from 'svelte';
 
 	// Types
 	import type { CssClasses } from '../../index.js';
 
-	// Props (Group)
-	/** Provide classes to set the tab list flex justification. */
-	export let justify: CssClasses = 'justify-start';
-	/** Provide classes to set the tab group border styles. */
-	export let border: CssClasses = 'border-b border-surface-400-500-token';
-
-	// Props (Tab)
-	/** Provide classes to style each tab's active styles. */
-	export let active: CssClasses = 'border-b-2 border-surface-900-50-token';
-	/** Provide classes to style each tab's hover styles. */
-	export let hover: CssClasses = 'hover:variant-soft';
-	/** Provide classes to style each tab's flex styles. */
-	export let flex: CssClasses = 'flex-none';
-	/** Provide classes to style each tab's padding styles. */
-	export let padding: CssClasses = 'px-4 py-2';
-	/** Provide classes to style each tab's box radius styles. */
-	export let rounded: CssClasses = 'rounded-tl-container-token rounded-tr-container-token';
-	/** Provide classes to set the vertical spacing between items. */
-	export let spacing: CssClasses = 'space-y-1';
-
-	// Props (regions)
-	/** Provide arbitrary classes to style the tab list region. */
-	export let regionList: CssClasses = '';
-	/** Provide arbitrary classes to style the tab panel region. */
-	export let regionPanel: CssClasses = '';
-
 	// Props (a11y)
-	/** Provide the ID of the element that labels the tab list. */
-	export let labelledby = '';
-	/** Matches the tab aria-control value, pairs with the panel. */
-	export let panel = '';
+
+	interface Props {
+		class?: string;
+		/** Provide classes to set the tab list flex justification. */
+		justify?: CssClasses;
+		/** Provide classes to set the tab group border styles. */
+		border?: CssClasses;
+		/** Provide classes to style each tab's active styles. */
+		active?: CssClasses;
+		/** Provide classes to style each tab's hover styles. */
+		hover?: CssClasses;
+		/** Provide classes to style each tab's flex styles. */
+		flex?: CssClasses;
+		/** Provide classes to style each tab's padding styles. */
+		padding?: CssClasses;
+		/** Provide classes to style each tab's box radius styles. */
+		rounded?: CssClasses;
+		/** Provide classes to set the vertical spacing between items. */
+		spacing?: CssClasses;
+		/** Provide arbitrary classes to style the tab list region. */
+		regionList?: CssClasses;
+		/** Provide arbitrary classes to style the tab panel region. */
+		regionPanel?: CssClasses;
+		/** Provide the ID of the element that labels the tab list. */
+		labelledby?: string;
+		/** Matches the tab aria-control value, pairs with the panel. */
+		panel?: string;
+		children?: import('svelte').Snippet;
+		panelContent?: import('svelte').Snippet;
+	}
+
+	let {
+		class: className = '',
+		justify = 'justify-start',
+		border = 'border-b border-surface-400-500-token',
+		active = 'border-b-2 border-surface-900-50-token',
+		hover = 'hover:variant-soft',
+		flex = 'flex-none',
+		padding = 'px-4 py-2',
+		rounded = 'rounded-tl-container-token rounded-tr-container-token',
+		spacing = 'space-y-1',
+		regionList = '',
+		regionPanel = '',
+		labelledby = '',
+		panel = '',
+		children,
+		panelContent
+	}: Props = $props();
 
 	// Context
-	setContext('active', active);
-	setContext('hover', hover);
-	setContext('flex', flex);
-	setContext('padding', padding);
-	setContext('rounded', rounded);
-	setContext('spacing', spacing);
+	untrack(() => setContext('active', active));
+	untrack(() => setContext('hover', hover));
+	untrack(() => setContext('flex', flex));
+	untrack(() => setContext('padding', padding));
+	untrack(() => setContext('rounded', rounded));
+	untrack(() => setContext('spacing', spacing));
 
 	// Classes
 	const cBase = 'space-y-4';
@@ -55,20 +72,20 @@
 	const cPanel = '';
 
 	// Reactive
-	$: classesBase = `${cBase} ${$$props.class ?? ''}`;
-	$: classesList = `${cList} ${justify} ${border} ${regionList}`;
-	$: classesPanel = `${cPanel} ${regionPanel}`;
+	let classesBase = $derived(`${cBase} ${className ?? ''}`);
+	let classesList = $derived(`${cList} ${justify} ${border} ${regionList}`);
+	let classesPanel = $derived(`${cPanel} ${regionPanel}`);
 </script>
 
 <div class="tab-group {classesBase}" data-testid="tab-group">
 	<!-- Tab List -->
 	<div class="tab-list {classesList}" role="tablist" aria-labelledby={labelledby}>
-		<slot />
+		{@render children?.()}
 	</div>
 	<!-- Tab Panel -->
-	{#if $$slots.panel}
+	{#if panelContent}
 		<div class="tab-panel {classesPanel}" role="tabpanel" aria-labelledby={panel} tabindex="0">
-			<slot name="panel" />
+			{@render panelContent?.()}
 		</div>
 	{/if}
 </div>
