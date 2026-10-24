@@ -2,19 +2,48 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { compile } from 'tailwindcss';
-import postcss from 'postcss';
+import postcss, { type Rule } from 'postcss';
 import postcssJs from 'postcss-js';
 import { skeleton, getThemeProperties, skeletonV2Spacing } from './index.js';
 import type { ConfigOptions } from './types.js';
 
 async function build(options: ConfigOptions, candidates: string[]) {
-	const compiler = await compile('@layer base, utilities; @tailwind utilities; @config "test";', {
-		loadModule: async () => ({ path: 'test', base: process.cwd(), module: { darkMode: 'class', plugins: [skeleton(options)] } })
-	});
+	const compiler = await compile(
+		'@layer base, utilities; @theme { --spacing: .25rem; } @layer utilities { @tailwind utilities; } @config "test";',
+		{
+			loadModule: async () => ({ path: 'test', base: process.cwd(), module: { darkMode: 'class', plugins: [skeleton(options)] } })
+		}
+	);
 	return compiler.build(candidates);
 }
 
 describe('Skeleton v2 style compatibility', () => {
+	it('lets custom padding override small button defaults regardless of Tailwind property sorting', async () => {
+		const css = await build({}, ['btn', 'btn-sm', 'px-2.5', 'py-[3px]']);
+		const rules = new Map<string, Rule>();
+		postcss.parse(css).walkRules((rule) => {
+			rules.set(rule.selector, rule);
+		});
+		const layers = (rule: Rule) => {
+			const names: string[] = [];
+			let parent = rule.parent;
+			while (parent && parent.type !== 'root') {
+				if (parent.type === 'atrule' && parent.name === 'layer') names.unshift(parent.params);
+				parent = parent.parent;
+			}
+			return names;
+		};
+		const smallButton = rules.get('.btn-sm')!;
+		expect(layers(rules.get('.btn')!)).toEqual(['utilities', 'components']);
+		expect(layers(smallButton)).toEqual(['utilities', 'components']);
+		expect(smallButton.toString()).toContain('padding-top: 0.375rem');
+		const horizontalPadding = rules.get('.px-2\\.5')!;
+		const verticalPadding = rules.get('.py-\\[3px\\]')!;
+		expect(layers(horizontalPadding)).toEqual(['utilities']);
+		expect(layers(verticalPadding)).toEqual(['utilities']);
+		expect(horizontalPadding.toString()).toContain('padding-inline: calc(var(--spacing) * 2.5)');
+		expect(verticalPadding.toString()).toContain('padding-block: 3px');
+	});
 	it('preserves sibling spacing, hidden-child handling, and custom margin overrides', async () => {
 		const compiler = await compile('@theme { --spacing: .25rem; } @tailwind utilities;');
 		const generated = compiler.build(['space-y-12', 'space-x-4', 'space-y-reverse']);
