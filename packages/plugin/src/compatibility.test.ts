@@ -36,6 +36,18 @@ describe('Skeleton v2 style compatibility', () => {
 		expect(active.toString()).toContain('brightness(0.9)');
 		expect(hover.source!.start!.offset).toBeLessThan(active.source!.start!.offset);
 	});
+	it.each(['list-nav a', 'list-nav button', 'list-option'])('keeps %s focus backgrounds after hover backgrounds', async (selector) => {
+		const css = await build({}, [selector.split(' ')[0], 'dark']);
+		const rules = new Map<string, Rule>();
+		postcss.parse(css).walkRules((rule) => {
+			const resolved = rule.parent?.type === 'rule' ? rule.selector.replaceAll('&', rule.parent.selector) : rule.selector;
+			for (const part of resolved.split(',')) rules.set(part.trim(), rule);
+		});
+		const hover = rules.get(`.${selector}:hover`)!;
+		const focus = rules.get(`.${selector}:focus`)!;
+		expect(focus.toString()).toContain('background-color: rgb(var(--color-primary-400) / 0.2)');
+		expect(hover.source!.start!.offset).toBeLessThan(focus.source!.start!.offset);
+	});
 	it.each(['input', 'textarea', 'select', 'input-group'])('keeps %s focus borders after dark-mode defaults', async (candidate) => {
 		const css = await build({}, ['dark', candidate]);
 		const rules = new Map<string, Rule>();

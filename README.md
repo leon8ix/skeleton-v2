@@ -58,7 +58,7 @@ Use a `.css` entry point; Tailwind's Vite transform does not process `.pcss` ent
 
 Adjust relative paths for the application. Put application-wide resets in a layer before `base` so they do not override layered utilities.
 
-Put general focus styling such as `:focus-visible` outline colors in `@layer base` so form controls retain their own focus indicators. Components and utilities share a layer to preserve v2 selector specificity, including rounded navigation links. Button hover and active rules are registered together to preserve their original state ordering, so pressed buttons darken even while hovered. During generation, button-size padding is combined into an equivalent shorthand so custom `px-*` and `py-*` utilities retain their precedence under Tailwind 4's property sorting.
+Put general focus styling such as `:focus-visible` outline colors in `@layer base` so form controls retain their own focus indicators. Components and utilities share a layer to preserve v2 selector specificity, including rounded navigation links. Button and navigation interaction rules are registered together to preserve their original state ordering: pressed buttons darken even while hovered, and navigation focus backgrounds take precedence over hover backgrounds. During generation, button-size padding is combined into an equivalent shorthand so custom `px-*` and `py-*` utilities retain their precedence under Tailwind 4's property sorting.
 
 ```ts
 import tailwindcss from '@tailwindcss/vite';
