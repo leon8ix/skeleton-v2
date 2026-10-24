@@ -15,7 +15,7 @@ The original documentation website, app-creation CLI, and obsolete development/r
 
 ## Development
 
-Use Node.js 24 and npm 12. Dependencies are locked in the root `package-lock.json`.
+Use Node.js 24 and npm 12.2.1. Dependencies are locked in the root `package-lock.json`.
 
 ```sh
 npm ci
@@ -29,7 +29,9 @@ npm pack --workspaces
 
 Run `npm run format` after edits. Build before testing the plugin because its generated CSS module is a build artifact. CI validates the maintained packages without publishing them.
 
-TypeScript remains at 6.0.3 because current Svelte packaging/checking tools do not support TypeScript 7 in their peer ranges. Node types track Node 24. Other active direct dependencies were updated to their current stable versions on 2026-10-11. Archived packages retain historical dependencies.
+Updated the maintained packages and compatible transitive dependencies to their latest supported releases on 2026-10-25, including Svelte packaging/checking tools, Vite, Vitest, jsdom, PostCSS, and its selector parser. CI uses npm 12.2.1.
+
+TypeScript remains at 6.0.3 because `@sveltejs/package@3.0.1` requires TypeScript 6 and `svelte-check@4.7.7` requires TypeScript 5 or 6. Node types remain at the latest Node 24 release, 24.19.2, to match the supported runtime. Archived packages retain historical dependencies.
 
 Package versions retain the upstream baseline numbers during this feature-branch migration. No npm release has been published. Fontanum installs built archives from its checked-in `vendor/` directory, with integrity recorded in its lockfile. Deployment does not depend on a sibling checkout. Rebuild and replace both archives together when changing this fork.
 

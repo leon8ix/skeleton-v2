@@ -32,17 +32,17 @@
 	"license": "MIT",
 	"homepage": "https://skeleton.dev/",
 	"devDependencies": {
-		"@types/postcss-js": "^4.1.0",
-		"postcss": "^8.5.29",
-		"tsx": "^4.23.15",
-		"tailwindcss": "^4.3.3",
 		"@tailwindcss/postcss": "^4.3.3",
-		"vitest": "^5.0.3",
-		"esbuild": "^0.28.2"
+		"@types/postcss-js": "^4.1.0",
+		"esbuild": "^0.28.2",
+		"postcss": "^8.5.31",
+		"tailwindcss": "^4.3.3",
+		"tsx": "^4.23.15",
+		"vitest": "^5.0.5"
 	},
 	"peerDependencies": {
-		"tailwindcss": "^4.3.3",
-		"postcss": "^8.5.29"
+		"postcss": "^8.5.29",
+		"tailwindcss": "^4.3.3"
 	},
 	"type": "commonjs",
 	"main": "./dist/index.js",
@@ -59,6 +59,6 @@
 	],
 	"dependencies": {
 		"postcss-js": "^5.1.0",
-		"postcss-selector-parser": "^7.1.6"
+		"postcss-selector-parser": "^7.1.7"
 	}
 }
