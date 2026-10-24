@@ -18,6 +18,36 @@ async function build(options: ConfigOptions, candidates: string[]) {
 }
 
 describe('Skeleton v2 style compatibility', () => {
+	it.each([
+		['btn', undefined],
+		['btn-icon', undefined],
+		['sk-btn', 'sk-'],
+		['sk-btn-icon', 'sk-']
+	] as const)('keeps %s pressed brightness after hover brightness', async (candidate, prefix) => {
+		const css = await build({ prefix }, [candidate]);
+		const rules = new Map<string, Rule>();
+		postcss.parse(css).walkRules((rule) => {
+			const selector = rule.parent?.type === 'rule' ? rule.selector.replaceAll('&', rule.parent.selector) : rule.selector;
+			rules.set(selector, rule);
+		});
+		const hover = rules.get(`.${candidate}:hover`)!;
+		const active = rules.get(`.${candidate}:active`)!;
+		expect(hover.toString()).toContain('brightness(1.15)');
+		expect(active.toString()).toContain('brightness(0.9)');
+		expect(hover.source!.start!.offset).toBeLessThan(active.source!.start!.offset);
+	});
+	it.each(['input', 'textarea', 'select', 'input-group'])('keeps %s focus borders after dark-mode defaults', async (candidate) => {
+		const css = await build({}, ['dark', candidate]);
+		const rules = new Map<string, Rule>();
+		postcss.parse(css).walkRules((rule) => {
+			const selector = rule.parent?.type === 'rule' ? rule.selector.replaceAll('&', rule.parent.selector) : rule.selector;
+			for (const part of selector.split(',')) rules.set(part.trim(), rule);
+		});
+		const dark = rules.get(`.dark .${candidate}`)!;
+		const focus = rules.get(`.${candidate}:focus-within`)!;
+		expect(focus.toString()).toContain('border-color: rgb(var(--color-primary-500) / var(--tw-border-opacity))');
+		expect(dark.source!.start!.offset).toBeLessThan(focus.source!.start!.offset);
+	});
 	it('lets custom padding override small button defaults regardless of Tailwind property sorting', async () => {
 		const css = await build({}, ['btn', 'btn-sm', 'px-2.5', 'py-[3px]']);
 		const rules = new Map<string, Rule>();

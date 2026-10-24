@@ -68,6 +68,10 @@ const skeleton: ReturnType<typeof plugin.withOptions<ConfigOptions>> = plugin.wi
 			// Keep components and utilities in the same layer: v2 descendant selectors
 			// such as .list-nav a must retain their higher specificity.
 			// Tailwind 4 requires media queries inside their utility selectors.
+			const buttonStates: CSSRuleObject[] = [];
+			const buttonStateSelectors = ['btn:hover', 'btn:active', 'btn-icon:hover', 'btn-icon:active'].map(
+				(selector) => `.${options?.prefix ?? ''}${selector}`
+			);
 			for (const [selector, declarations] of Object.entries(componentStyles)) {
 				if (selector.startsWith('@media')) {
 					for (const rules of Array.isArray(declarations) ? declarations : [declarations]) {
@@ -75,10 +79,15 @@ const skeleton: ReturnType<typeof plugin.withOptions<ConfigOptions>> = plugin.wi
 							addComponents({ [nestedSelector]: { [selector]: nestedDeclarations as CSSRuleObject } });
 						}
 					}
+				} else if (buttonStateSelectors.includes(selector)) {
+					buttonStates.push({ [selector]: declarations as CSSRuleObject });
 				} else {
 					addComponents({ [selector]: declarations as CSSRuleObject });
 				}
 			}
+			// Keep :active after :hover instead of sorting these rules by properties.
+			// Group only button states so dark ancestors retain their existing cascade.
+			addComponents(buttonStates);
 		};
 	},
 	// Config
