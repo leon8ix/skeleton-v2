@@ -65,18 +65,18 @@ const skeleton: ReturnType<typeof plugin.withOptions<ConfigOptions>> = plugin.wi
 
 			addBase(baseStyles);
 			addUtilities(coreUtilities);
-			// Tailwind 4 sorts addComponents alongside utilities. Keep component defaults
-			// in a sublayer so utility overrides retain their v2 precedence.
-			// Media queries must also stay inside their utility selectors.
+			// Keep components and utilities in the same layer: v2 descendant selectors
+			// such as .list-nav a must retain their higher specificity.
+			// Tailwind 4 requires media queries inside their utility selectors.
 			for (const [selector, declarations] of Object.entries(componentStyles)) {
 				if (selector.startsWith('@media')) {
 					for (const rules of Array.isArray(declarations) ? declarations : [declarations]) {
 						for (const [nestedSelector, nestedDeclarations] of Object.entries(rules as CSSRuleObject)) {
-							addComponents({ [nestedSelector]: { '@layer components': { [selector]: nestedDeclarations as CSSRuleObject } } });
+							addComponents({ [nestedSelector]: { [selector]: nestedDeclarations as CSSRuleObject } });
 						}
 					}
 				} else {
-					addComponents({ [selector]: { '@layer components': declarations as CSSRuleObject } });
+					addComponents({ [selector]: declarations as CSSRuleObject });
 				}
 			}
 		};

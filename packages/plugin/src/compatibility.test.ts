@@ -24,25 +24,30 @@ describe('Skeleton v2 style compatibility', () => {
 		postcss.parse(css).walkRules((rule) => {
 			rules.set(rule.selector, rule);
 		});
-		const layers = (rule: Rule) => {
-			const names: string[] = [];
-			let parent = rule.parent;
-			while (parent && parent.type !== 'root') {
-				if (parent.type === 'atrule' && parent.name === 'layer') names.unshift(parent.params);
-				parent = parent.parent;
-			}
-			return names;
-		};
 		const smallButton = rules.get('.btn-sm')!;
-		expect(layers(rules.get('.btn')!)).toEqual(['utilities', 'components']);
-		expect(layers(smallButton)).toEqual(['utilities', 'components']);
-		expect(smallButton.toString()).toContain('padding-top: 0.375rem');
+		expect(smallButton.toString()).toContain('padding: 0.375rem 0.75rem 0.375rem 0.75rem');
 		const horizontalPadding = rules.get('.px-2\\.5')!;
 		const verticalPadding = rules.get('.py-\\[3px\\]')!;
-		expect(layers(horizontalPadding)).toEqual(['utilities']);
-		expect(layers(verticalPadding)).toEqual(['utilities']);
+		expect(smallButton.parent).toBe(horizontalPadding.parent);
+		expect(smallButton.parent).toBe(verticalPadding.parent);
+		expect(smallButton.source!.start!.offset).toBeLessThan(horizontalPadding.source!.start!.offset);
+		expect(smallButton.source!.start!.offset).toBeLessThan(verticalPadding.source!.start!.offset);
 		expect(horizontalPadding.toString()).toContain('padding-inline: calc(var(--spacing) * 2.5)');
 		expect(verticalPadding.toString()).toContain('padding-block: 3px');
+	});
+	it('preserves navigation selector specificity against padding and corner utilities', async () => {
+		const css = await build({}, ['list-nav', 'px-2', 'py-1', 'rounded-lg']);
+		const rules = new Map<string, Rule>();
+		postcss.parse(css).walkRules((rule) => {
+			rules.set(rule.selector, rule);
+		});
+		const navigation = rules.get('.list-nav a')!;
+		expect(navigation.toString()).toContain('padding-left: 1rem');
+		expect(navigation.toString()).toContain('padding-top: 0.5rem');
+		expect(navigation.toString()).toContain('border-radius: var(--theme-rounded-base)');
+		for (const selector of ['.px-2', '.py-1', '.rounded-lg']) {
+			expect(navigation.parent).toBe(rules.get(selector)!.parent);
+		}
 	});
 	it('preserves sibling spacing, hidden-child handling, and custom margin overrides', async () => {
 		const compiler = await compile('@theme { --spacing: .25rem; } @tailwind utilities;');
