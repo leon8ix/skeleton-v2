@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import type { ToastSettings } from './types.js';
 import ToastTest from './ToastTest.svelte';
@@ -19,11 +20,14 @@ describe('Toast.svelte', () => {
 
 	// see: https://testing-library.com/docs/svelte-testing-library/faq/#why-arent-transition-events-running
 	beforeEach(() => {
+		vi.useFakeTimers();
 		const rafMock = (fn: (_: Date) => void) => setTimeout(() => fn(new Date()), 16);
 		vi.stubGlobal('requestAnimationFrame', rafMock);
 	});
 
 	afterEach(() => {
+		vi.clearAllTimers();
+		vi.useRealTimers();
 		vi.unstubAllGlobals();
 	});
 
@@ -31,7 +35,7 @@ describe('Toast.svelte', () => {
 		expect(() => screen.getByTestId(snackbarWrapperTestId)).toThrow();
 	});
 
-	it('keeps the toast wrapper visible if a second toast is scheduled on the same tick as the closing of the first one, until the outro animation of the first toast is finished', async () => {
+	it('keeps the wrapper visible when a new toast is queued as another auto-hides', async () => {
 		const { getByTestId } = render(ToastTest, {
 			props: {
 				max: 2,
@@ -43,27 +47,18 @@ describe('Toast.svelte', () => {
 			}
 		});
 
-		const getWrapperElementAfterTimeout = (timeout: number) =>
-			new Promise((resolve) =>
-				setTimeout(() => {
-					try {
-						const el = getByTestId(snackbarWrapperTestId);
-						resolve(el);
-					} catch {
-						resolve(false);
-					}
-				}, timeout)
-			);
+		await vi.advanceTimersByTimeAsync(10);
+		await tick();
+		expect(getByTestId(snackbarWrapperTestId)).toBeTruthy();
+		expect(screen.getByText('B')).toBeTruthy();
 
-		const [wrapperVisibilityOnAToBChange, wrapperVisibilityAfterAOutroFinishes, wrapperVisibilityAfterBOutroFinishes] = await Promise.all([
-			getWrapperElementAfterTimeout(10),
-			getWrapperElementAfterTimeout(16),
-			getWrapperElementAfterTimeout(80)
-		]);
+		await vi.advanceTimersByTimeAsync(6);
+		await tick();
+		expect(getByTestId(snackbarWrapperTestId)).toBeTruthy();
 
-		expect(wrapperVisibilityOnAToBChange).toBeTruthy();
-		expect(wrapperVisibilityAfterAOutroFinishes).toBeTruthy();
-		expect(wrapperVisibilityAfterBOutroFinishes).toBeFalsy();
+		await vi.advanceTimersByTimeAsync(64);
+		await tick();
+		expect(screen.queryByTestId(snackbarWrapperTestId)).toBeNull();
 	});
 
 	it('Renders modal alert', async () => {
