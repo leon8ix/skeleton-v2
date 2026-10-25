@@ -1,0 +1,34 @@
+name: Publish maintained packages
+
+on:
+  push:
+    tags: ['packages-*']
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-maintained-packages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://npm.pkg.github.com
+      - run: npm install --global npm@12.2.1
+      - run: npm ci
+      - run: npm run build
+      - run: npm run format:check
+      - run: npm run check
+      - run: npm test
+      - run: npm audit --audit-level=moderate
+      - run: npm publish --workspaces
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

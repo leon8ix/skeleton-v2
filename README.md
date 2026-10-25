@@ -27,13 +27,23 @@ npm audit
 npm pack --workspaces
 ```
 
-Run `npm run format` after edits. Build before testing the plugin because its generated CSS module is a build artifact. CI validates the maintained packages without publishing them.
+Run `npm run format` after edits. Build before testing the plugin because its generated CSS module is a build artifact. Branch CI validates the maintained packages. The publishing workflow builds and validates release tags before publishing to GitHub Packages.
 
 Updated the maintained packages and compatible transitive dependencies to their latest supported releases on 2026-10-25, including Svelte packaging/checking tools, Vite, Vitest, jsdom, PostCSS, and its selector parser. CI uses npm 12.2.1.
 
 TypeScript remains at 6.0.3 because `@sveltejs/package@3.0.1` requires TypeScript 6 and `svelte-check@4.7.7` requires TypeScript 5 or 6. Node types remain at the latest Node 24 release, 24.19.2, to match the supported runtime. Archived packages retain historical dependencies.
 
-Package versions retain the upstream baseline numbers during this feature-branch migration. No npm release has been published. Fontanum installs built archives from its checked-in `vendor/` directory, with integrity recorded in its lockfile. Deployment does not depend on a sibling checkout. Rebuild and replace both archives together when changing this fork.
+## Installation and publishing
+
+Both packages are published from this repository to GitHub Packages under the `@leon8ix` scope. Configure `@leon8ix:registry=https://npm.pkg.github.com` in the consuming project's `.npmrc` and authenticate with a GitHub token that has package read access. Fontanum already uses this registry and its CI package-read credential for the other `@leon8ix` packages.
+
+```sh
+npm install --save-dev --save-exact @leon8ix/skeleton-v2@2.11.0 @leon8ix/skeleton-v2-tailwind@0.4.1
+```
+
+The first maintained releases retain the upstream version numbers under the fork's distinct package names. The consumer's lockfile records the registry URLs and integrity; no package archives or sibling checkout are needed in the consuming repository.
+
+To publish a reviewed commit, push a tag named `packages-<library-version>-<plugin-version>` (initially `packages-2.11.0-0.4.1`). The `Publish maintained packages` workflow builds, checks, tests, and audits both workspaces, then publishes them using the repository's `GITHUB_TOKEN`. Each package includes its workspace directory and repository URL so GitHub links it to this source repository. Published versions are immutable; update package versions and the lockfile before publishing subsequent changes.
 
 ## Tailwind 4 setup
 
